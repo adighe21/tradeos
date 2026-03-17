@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>TradeOS — AI Trading Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0A0E17;--bg2:#0F1520;--bg3:#141B28;--bg4:#1A2235;
+  --green:#00D68F;--green2:#00F0A0;--red:#FF4D6A;--red2:#FF6B84;
+  --blue:#2979FF;--blue2:#448AFF;--gold:#FFB300;--gold2:#FFCA28;
+  --purple:#7C4DFF;--cyan:#00BCD4;
+  --text:#E8EDF5;--text2:#A0AABB;--text3:#5A6478;
+  --border:#1E2A3D;--border2:#253044;
+  --white:#ffffff;
+}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* TOPBAR */
+.topbar{background:var(--bg2);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;border-bottom:1px solid var(--border);z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--green),var(--blue));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--bg);font-family:'JetBrains Mono',monospace;}
+.logo-name{font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--white);font-weight:700;letter-spacing:1px;}
+.logo-tag{color:var(--text3);font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;display:none;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.market-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(0,214,143,0.1);border:1px solid rgba(0,214,143,0.2);}
+.market-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite;}
+.market-text{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--green);}
+.topbar-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;white-space:nowrap;}
+.topbar-btn-hide{display:none;}
+.hamburger{display:flex;flex-direction:column;gap:4px;cursor:pointer;padding:6px;background:none;border:none;}
+.hamburger span{display:block;width:20px;height:2px;background:var(--text2);border-radius:2px;}
+
+/* LANG SWITCHER */
+.lang-switcher{position:relative;}
+.lang-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.lang-btn:hover{border-color:var(--green);color:var(--green);}
+.lang-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;overflow:hidden;z-index:500;min-width:148px;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:none;}
+.lang-dropdown.open{display:block;}
+.lang-option{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border:none;background:transparent;width:100%;font-family:'DM Sans',sans-serif;}
+.lang-option:hover{background:var(--bg4);}
+.lang-option.active{background:rgba(0,214,143,0.08);}
+.lang-option-flag{font-size:15px;}
+.lang-option-name{color:var(--text2);font-size:13px;font-weight:500;}
+.lang-option.active .lang-option-name{color:var(--green);}
+
+/* APP */
+.app{display:flex;flex:1;overflow:hidden;position:relative;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:150;}
+.sidebar-overlay.open{display:block;}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:transform 0.3s ease;z-index:200;}
+.sidebar-new-btn{margin:12px;padding:11px;border-radius:8px;background:var(--green);border:none;color:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.sidebar-section{padding:12px 14px 5px;color:var(--text3);font-size:9px;letter-spacing:2px;font-weight:700;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;border-radius:8px;margin:1px 8px;transition:all 0.15s;}
+.sidebar-item:hover,.sidebar-item:active{background:var(--bg4);}
+.sidebar-item.active{background:rgba(0,214,143,0.1);border:1px solid rgba(0,214,143,0.2);}
+.sidebar-item-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.sidebar-item-text{font-size:13px;font-weight:500;color:var(--text2);}
+.sidebar-item.active .sidebar-item-text{color:var(--green);}
+.sidebar-item-sub{font-size:10px;color:var(--text3);}
+.sidebar-divider{height:1px;background:var(--border);margin:8px 14px;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+
+/* WELCOME */
+.welcome{flex:1;overflow-y:auto;padding:20px 16px;-webkit-overflow-scrolling:touch;}
+.welcome-top{text-align:center;margin-bottom:28px;}
+.welcome-greeting{font-family:'JetBrains Mono',monospace;font-size:22px;color:var(--white);font-weight:700;margin-bottom:6px;}
+.welcome-sub{color:var(--text2);font-size:14px;line-height:1.5;}
+.market-ticker{display:flex;gap:12px;overflow-x:auto;padding:12px 0;margin-bottom:24px;-webkit-overflow-scrolling:touch;}
+.market-ticker::-webkit-scrollbar{display:none;}
+.ticker-pill{flex-shrink:0;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:110px;}
+.ticker-sym{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);margin-bottom:2px;}
+.ticker-price{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--white);}
+.ticker-change{font-family:'JetBrains Mono',monospace;font-size:11px;margin-top:2px;}
+.ticker-change.up{color:var(--green);}
+.ticker-change.down{color:var(--red);}
+.agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;}
+.agent-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.agent-card:active{transform:scale(0.97);}
+.agent-card-stripe{position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0;}
+.agent-card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px;}
+.agent-card-name{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.agent-card-desc{color:var(--text2);font-size:11px;line-height:1.5;display:none;}
+.agent-card-save{margin-top:6px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.quick-section{text-align:center;padding-bottom:20px;}
+.quick-label{color:var(--text2);font-size:13px;margin-bottom:10px;}
+.quick-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.chip{padding:7px 13px;border-radius:16px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;font-family:'JetBrains Mono',monospace;}
+.chip:active{border-color:var(--green);color:var(--green);}
+
+/* CHAT */
+.chat-screen{flex:1;display:flex;flex-direction:column;overflow:hidden;display:none;}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.chat-header-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.chat-header-name{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--white);}
+.chat-header-status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px;margin-top:1px;}
+.chat-header-status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;}
+.chat-back-btn{margin-left:auto;padding:6px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;flex-shrink:0;}
+.disclaimer{margin:10px 12px 0;background:rgba(255,179,0,0.06);border:1px solid rgba(255,179,0,0.2);border-radius:8px;padding:8px 12px;display:flex;gap:8px;align-items:flex-start;}
+.disclaimer span{font-size:11px;color:var(--gold2);line-height:1.4;font-weight:500;}
+.chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch;}
+.msg{display:flex;gap:10px;max-width:88%;animation:fadeUp 0.25s ease;}
+.msg.user{flex-direction:row-reverse;margin-left:auto;}
+.msg-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.msg.assistant .msg-avatar{background:linear-gradient(135deg,var(--green),var(--blue));color:var(--bg);font-weight:700;font-size:11px;}
+.msg.user .msg-avatar{background:var(--bg4);color:var(--text2);font-weight:700;font-size:10px;border:1px solid var(--border2);}
+.msg-agent-label{font-size:10px;color:var(--green);font-weight:600;margin-bottom:4px;font-family:'JetBrains Mono',monospace;}
+.msg-bubble{padding:12px 14px;border-radius:14px;font-size:13px;line-height:1.75;}
+.msg.assistant .msg-bubble{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-top-left-radius:4px;}
+.msg.user .msg-bubble{background:var(--blue);color:white;border-top-right-radius:4px;}
+.msg-time{font-size:10px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace;}
+.msg.user .msg-time{text-align:right;}
+.typing{display:flex;align-items:center;gap:5px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;border-top-left-radius:4px;width:fit-content;}
+.typing span{width:7px;height:7px;border-radius:50%;background:var(--green);animation:bounce 1.2s ease infinite;}
+.typing span:nth-child(2){animation-delay:0.2s;} .typing span:nth-child(3){animation-delay:0.4s;}
+
+/* MT4/MT5 ACTION BAR */
+.mt-bar{background:var(--bg2);border-top:1px solid var(--border);padding:8px 12px;display:flex;gap:8px;align-items:center;flex-shrink:0;overflow-x:auto;}
+.mt-bar::-webkit-scrollbar{display:none;}
+.mt-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.2s;text-decoration:none;}
+.mt-btn.buy{background:rgba(0,214,143,0.15);border:1px solid rgba(0,214,143,0.4);color:var(--green);}
+.mt-btn.buy:hover{background:rgba(0,214,143,0.25);}
+.mt-btn.sell{background:rgba(255,77,106,0.15);border:1px solid rgba(255,77,106,0.4);color:var(--red);}
+.mt-btn.sell:hover{background:rgba(255,77,106,0.25);}
+.mt-btn.neutral{background:var(--bg4);border:1px solid var(--border2);color:var(--text2);}
+.mt-btn.neutral:hover{border-color:var(--blue2);color:var(--blue2);}
+.mt-bar-label{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+
+/* INPUT */
+.chat-input-area{padding:10px 12px;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0;}
+.chat-input-wrap{display:flex;gap:10px;align-items:flex-end;background:var(--bg3);border:1.5px solid var(--border2);border-radius:10px;padding:10px 12px;transition:border-color 0.2s;}
+.chat-input-wrap:focus-within{border-color:var(--green);}
+.chat-input{flex:1;background:transparent;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);resize:none;max-height:100px;line-height:1.5;}
+.chat-input::placeholder{color:var(--text3);}
+.send-btn{width:36px;height:36px;border-radius:8px;background:var(--green);border:none;color:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;font-weight:700;}
+.send-btn:disabled{background:var(--bg4);color:var(--text3);}
+.input-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+.input-bottom span{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.rag-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.rag-toggle input{accent-color:var(--green);}
+
+/* MARKETING */
+.marketing{flex:1;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch;}
+.hero{background:var(--bg2);padding:48px 20px;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,214,143,0.06) 0%,transparent 60%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,214,143,0.1);border:1px solid rgba(0,214,143,0.25);border-radius:20px;padding:4px 12px;margin-bottom:20px;color:var(--green);font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
+.hero h1{font-family:'JetBrains Mono',monospace;font-size:clamp(28px,6vw,52px);color:var(--white);line-height:1.1;margin-bottom:16px;font-weight:700;}
+.hero h1 em{color:var(--green);font-style:normal;}
+.hero-sub{color:var(--text2);font-size:15px;margin:0 auto 28px;line-height:1.7;max-width:560px;}
+.hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+.btn-green{padding:12px 24px;border-radius:8px;background:var(--green);border:none;color:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-ghost{padding:12px 24px;border-radius:8px;background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+.hero-stats{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:460px;margin:0 auto;}
+.hero-stat{padding:16px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center;}
+.hero-stat:nth-child(2n){border-right:none;}
+.hero-stat-val{font-family:'JetBrains Mono',monospace;font-size:22px;color:var(--green);font-weight:700;}
+.hero-stat-label{color:var(--text3);font-size:10px;margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.mkt-section{padding:44px 20px;}
+.section-eyebrow{color:var(--green);font-size:10px;letter-spacing:2px;font-weight:700;text-transform:uppercase;margin-bottom:8px;font-family:'JetBrains Mono',monospace;}
+.section-title{font-family:'JetBrains Mono',monospace;font-size:24px;color:var(--white);font-weight:700;margin-bottom:10px;line-height:1.2;}
+.section-sub{color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:24px;}
+.agents-mkt-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px;}
+.agent-mkt-card{background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:20px;transition:border-color 0.2s;}
+.agent-mkt-card:hover{border-color:var(--green);}
+.agent-mkt-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px;}
+.agent-mkt-name{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--white);margin-bottom:6px;}
+.agent-mkt-desc{color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:10px;}
+.agent-mkt-tag{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--green);background:rgba(0,214,143,0.1);padding:4px 10px;border-radius:12px;display:inline-flex;}
+.mt4-section{padding:44px 20px;background:var(--bg2);}
+.mt4-box{background:var(--bg3);border:1px solid var(--border2);border-radius:16px;padding:28px;margin-top:20px;}
+.mt4-logo{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.mt4-logo-badge{padding:6px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;}
+.mt4-features{display:grid;grid-template-columns:1fr;gap:12px;}
+.mt4-feat{display:flex;gap:12px;align-items:flex-start;}
+.mt4-feat-check{color:var(--green);font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace;}
+.mt4-feat-text{color:var(--text2);font-size:13px;line-height:1.5;}
+.testimonials-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px;}
+.testimonial{background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:20px;}
+.t-stars{color:var(--gold);font-size:12px;margin-bottom:10px;}
+.t-quote{color:var(--text);font-size:13px;line-height:1.7;margin-bottom:14px;font-style:italic;}
+.t-author{display:flex;align-items:center;gap:10px;}
+.t-avatar{width:34px;height:34px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:700;font-size:12px;border:1px solid var(--border2);font-family:'JetBrains Mono',monospace;}
+.t-name{font-weight:600;font-size:13px;color:var(--white);}
+.t-role{font-size:11px;color:var(--text3);}
+.pricing-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:24px;}
+.price-card{background:var(--bg3);border:1.5px solid var(--border2);border-radius:16px;padding:24px;position:relative;}
+.price-card.featured{background:var(--bg4);border-color:var(--green);}
+.price-popular{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--green);color:var(--bg);font-size:10px;font-weight:800;padding:3px 14px;border-radius:20px;white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+.price-plan-name{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.price-card.featured .price-plan-name{color:var(--green);}
+.price-val{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;color:var(--white);}
+.price-mo{font-size:13px;color:var(--text3);margin-bottom:6px;}
+.price-tagline{font-size:13px;color:var(--text2);margin-bottom:20px;}
+.price-btn{width:100%;padding:12px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:20px;}
+.price-card:not(.featured) .price-btn{background:transparent;border:1.5px solid var(--green);color:var(--green);}
+.price-card.featured .price-btn{background:var(--green);border:none;color:var(--bg);}
+.price-feats{display:flex;flex-direction:column;gap:8px;}
+.price-feat{display:flex;gap:8px;font-size:12px;color:var(--text2);}
+.price-feat-check{color:var(--green);flex-shrink:0;font-family:'JetBrains Mono',monospace;}
+.footer-cta{padding:56px 20px;background:var(--bg2);text-align:center;border-top:1px solid var(--border);}
+.footer-cta h2{font-family:'JetBrains Mono',monospace;font-size:26px;color:var(--white);margin-bottom:12px;line-height:1.2;}
+.footer-cta p{color:var(--text2);font-size:14px;margin-bottom:28px;line-height:1.6;}
+.footer-bar{padding:16px 20px;background:var(--bg);border-top:1px solid var(--border);}
+.footer-bar span{font-size:10px;color:var(--text3);display:block;text-align:center;line-height:1.8;font-family:'JetBrains Mono',monospace;}
+
+/* DESKTOP */
+@media(min-width:768px){
+  .topbar{height:58px;padding:0 24px;} .logo-tag{display:inline;} .topbar-btn-hide{display:flex;}
+  .hamburger{display:none;} .sidebar{position:relative;transform:none !important;} .sidebar-overlay{display:none !important;}
+  .agent-grid{grid-template-columns:repeat(3,1fr);gap:14px;} .agent-card-desc{display:block;} .agent-card{padding:20px;} .agent-card-icon{width:40px;height:40px;font-size:20px;}
+  .welcome{padding:32px;} .welcome-greeting{font-size:26px;}
+  .chat-messages{padding:18px 24px;} .chat-input-area{padding:12px 24px;} .chat-header{padding:12px 24px;} .msg{max-width:78%;} .msg-bubble{font-size:14px;} .disclaimer{margin:10px 20px 0;}
+  .hero{padding:64px 60px;} .mkt-section{padding:60px 60px;} .mt4-section{padding:60px 60px;}
+  .agents-mkt-grid{grid-template-columns:repeat(3,1fr);} .testimonials-grid{grid-template-columns:repeat(3,1fr);}
+  .pricing-grid{grid-template-columns:repeat(3,1fr);} .mt4-features{grid-template-columns:repeat(2,1fr);}
+  .hero-stats{grid-template-columns:repeat(4,1fr);} .hero-stat:nth-child(2n){border-right:1px solid var(--border);} .hero-stat:nth-child(4n){border-right:none;} .hero-stat{border-bottom:none;}
+  .footer-cta{padding:64px 60px;} .footer-cta h2{font-size:36px;}
+  .footer-bar{display:flex;justify-content:space-between;padding:16px 60px;} .footer-bar span{display:inline;}
+}
+@media(max-width:767px){.sidebar{position:fixed;top:56px;left:0;bottom:0;z-index:200;transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+    <div class="logo">
+      <div class="logo-mark">T</div>
+      <span class="logo-name">TradeOS</span>
+      <span class="logo-tag"> · AI TRADING</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="market-pill"><div class="market-dot"></div><span class="market-text" id="market-status-text">MARKETS OPEN</span></div>
+    <button class="topbar-btn topbar-btn-hide" onclick="showMarketing()" id="nav-about-btn">About</button>
+    <button class="topbar-btn topbar-btn-hide" onclick="showPricing()" id="nav-pricing-btn">Pricing</button>
+    <button class="topbar-btn topbar-btn-hide" onclick="showWelcome()" style="border-color:rgba(0,214,143,0.4);color:var(--green)" id="nav-app-btn">Launch App</button>
+    <div class="lang-switcher">
+      <button class="lang-btn" onclick="toggleLangDropdown()">
+        <span id="current-flag">🇺🇸</span>
+        <span id="current-lang-code">EN</span>
+        <span style="font-size:9px;opacity:0.5">▼</span>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown">
+        <button class="lang-option active" onclick="setLang('en')" id="lang-en"><span class="lang-option-flag">🇺🇸</span><span class="lang-option-name">English</span></button>
+        <button class="lang-option" onclick="setLang('de')" id="lang-de"><span class="lang-option-flag">🇩🇪</span><span class="lang-option-name">Deutsch</span></button>
+        <button class="lang-option" onclick="setLang('es')" id="lang-es"><span class="lang-option-flag">🇪🇸</span><span class="lang-option-name">Español</span></button>
+        <button class="lang-option" onclick="setLang('hi')" id="lang-hi"><span class="lang-option-flag">🇮🇳</span><span class="lang-option-name">हिन्दी</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app">
+  <div class="sidebar" id="sidebar">
+    <button class="sidebar-new-btn" onclick="showWelcome();closeSidebar()" id="sidebar-new-btn">+ New Analysis</button>
+    <div class="sidebar-section" id="sidebar-section-agents">AI Agents</div>
+    <div class="sidebar-item" onclick="openAgent('stocks');closeSidebar()" id="nav-stocks"><div class="sidebar-item-icon" style="background:rgba(0,214,143,0.1)">📈</div><div><div class="sidebar-item-text" id="snav-stocks">Stock Screener</div><div class="sidebar-item-sub">Equities & ETFs</div></div></div>
+    <div class="sidebar-item" onclick="openAgent('options');closeSidebar()" id="nav-options"><div class="sidebar-item-icon" style="background:rgba(124,77,255,0.1)">⚡</div><div><div class="sidebar-item-text" id="snav-options">Options Analyst</div><div class="sidebar-item-sub">Calls, puts, Greeks</div></div></div>
+    <div class="sidebar-item" onclick="openAgent('forex');closeSidebar()" id="nav-forex"><div class="sidebar-item-icon" style="background:rgba(0,188,212,0.1)">💱</div><div><div class="sidebar-item-text" id="snav-forex">Forex Screener</div><div class="sidebar-item-sub">Currency pairs</div></div></div>
+    <div class="sidebar-item" onclick="openAgent('funds');closeSidebar()" id="nav-funds"><div class="sidebar-item-icon" style="background:rgba(255,179,0,0.1)">🏦</div><div><div class="sidebar-item-text" id="snav-funds">Fund Analyzer</div><div class="sidebar-item-sub">MFs & ETFs</div></div></div>
+    <div class="sidebar-item" onclick="openAgent('risk');closeSidebar()" id="nav-risk"><div class="sidebar-item-icon" style="background:rgba(255,77,106,0.1)">🛡️</div><div><div class="sidebar-item-text" id="snav-risk">Risk Manager</div><div class="sidebar-item-sub">Portfolio risk</div></div></div>
+    <div class="sidebar-item" onclick="openAgent('macro');closeSidebar()" id="nav-macro"><div class="sidebar-item-icon" style="background:rgba(41,121,255,0.1)">🌍</div><div><div class="sidebar-item-text" id="snav-macro">Macro Analyst</div><div class="sidebar-item-sub">Economy & news</div></div></div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section" id="sidebar-section-recent">Recent</div>
+    <div class="sidebar-item"><div class="sidebar-item-icon" style="background:rgba(0,214,143,0.08);font-size:12px">📈</div><div><div class="sidebar-item-text" style="font-size:12px;color:var(--text3)">AAPL analysis</div></div></div>
+    <div class="sidebar-item"><div class="sidebar-item-icon" style="background:rgba(124,77,255,0.08);font-size:12px">⚡</div><div><div class="sidebar-item-text" style="font-size:12px;color:var(--text3)">TSLA calls screen</div></div></div>
+    <div class="sidebar-item"><div class="sidebar-item-icon" style="background:rgba(0,188,212,0.08);font-size:12px">💱</div><div><div class="sidebar-item-text" style="font-size:12px;color:var(--text3)">EUR/USD setup</div></div></div>
+  </div>
+
+  <div class="main">
+    <!-- WELCOME -->
+    <div class="welcome" id="welcome-screen">
+      <div class="welcome-top">
+        <div class="welcome-greeting" id="welcome-greeting">TRADEOS TERMINAL_</div>
+        <div class="welcome-sub" id="welcome-sub">AI-powered analysis across stocks, options, forex, and funds. Connected to MT4/MT5.</div>
+      </div>
+
+      <!-- Live ticker -->
+      <div class="market-ticker" id="market-ticker">
+        <div class="ticker-pill"><div class="ticker-sym">SPY</div><div class="ticker-price" id="spy-price">---</div><div class="ticker-change up" id="spy-chg">---</div></div>
+        <div class="ticker-pill"><div class="ticker-sym">QQQ</div><div class="ticker-price" id="qqq-price">---</div><div class="ticker-change up" id="qqq-chg">---</div></div>
+        <div class="ticker-pill"><div class="ticker-sym">AAPL</div><div class="ticker-price" id="aapl-price">---</div><div class="ticker-change up" id="aapl-chg">---</div></div>
+        <div class="ticker-pill"><div class="ticker-sym">EUR/USD</div><div class="ticker-price" id="eurusd-price">---</div><div class="ticker-change up" id="eurusd-chg">---</div></div>
+        <div class="ticker-pill"><div class="ticker-sym">BTC</div><div class="ticker-price" id="btc-price">---</div><div class="ticker-change up" id="btc-chg">---</div></div>
+        <div class="ticker-pill"><div class="ticker-sym">GOLD</div><div class="ticker-price" id="gold-price">---</div><div class="ticker-change up" id="gold-chg">---</div></div>
+      </div>
+
+      <div class="agent-grid" id="agent-grid"></div>
+      <div class="quick-section">
+        <div class="quick-label" id="quick-label">Quick analysis:</div>
+        <div class="quick-chips" id="quick-chips"></div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat-screen" id="chat-screen">
+      <div class="chat-header">
+        <div class="chat-header-icon" id="chat-header-icon">📈</div>
+        <div>
+          <div class="chat-header-name" id="chat-header-name">Stock Screener</div>
+          <div class="chat-header-status" id="chat-header-status">Live data · AI-powered</div>
+        </div>
+        <button class="chat-back-btn" onclick="showWelcome()" id="chat-back-btn">← Back</button>
+      </div>
+      <div class="disclaimer"><span>⚠️ <strong>For informational purposes only.</strong> Not financial advice. Always conduct your own research before trading.</span></div>
+      <div class="chat-messages" id="chat-messages"></div>
+
+      <!-- MT4/MT5 action bar -->
+      <div class="mt-bar" id="mt-bar">
+        <span class="mt-bar-label" id="mt-bar-label">OPEN IN:</span>
+        <a class="mt-btn buy" href="mt4://trade" id="mt4-buy-btn">▲ MT4 BUY</a>
+        <a class="mt-btn sell" href="mt4://trade" id="mt4-sell-btn">▼ MT4 SELL</a>
+        <a class="mt-btn neutral" href="mt5://trade" id="mt5-btn">MT5 →</a>
+        <a class="mt-btn neutral" href="https://www.tradingview.com" target="_blank" id="tv-btn">TradingView →</a>
+        <a class="mt-btn neutral" href="https://finance.yahoo.com" target="_blank" id="yf-btn">Yahoo Finance →</a>
+      </div>
+
+      <div class="chat-input-area">
+        <div class="chat-input-wrap">
+          <textarea class="chat-input" id="chat-input" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()">→</button>
+        </div>
+        <div class="input-bottom">
+          <span id="input-hint">Enter to send</span>
+          <label class="rag-toggle"><input type="checkbox" id="use-rag" checked/> <span id="rag-label">Market KB</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKETING -->
+    <div class="marketing" id="marketing-page">
+      <div class="hero">
+        <div class="hero-badge" id="hero-badge">⚡ AI-POWERED TRADING INTELLIGENCE</div>
+        <h1 id="hero-title">Trade Smarter.<br><em>Not Harder.</em></h1>
+        <p class="hero-sub" id="hero-sub">AI agents that screen stocks, analyze options, monitor forex, and evaluate funds — connected directly to MT4/MT5 for instant execution.</p>
+        <div class="hero-btns">
+          <button class="btn-green" onclick="showWelcome()" id="hero-cta1">Launch Terminal</button>
+          <button class="btn-ghost" onclick="showPricing()" id="hero-cta2">View Pricing</button>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="hero-stat-val">6</div><div class="hero-stat-label">AI AGENTS</div></div>
+          <div class="hero-stat"><div class="hero-stat-val">50+</div><div class="hero-stat-label">INDICATORS</div></div>
+          <div class="hero-stat"><div class="hero-stat-val">MT4/5</div><div class="hero-stat-label">CONNECTED</div></div>
+          <div class="hero-stat"><div class="hero-stat-val">24/7</div><div class="hero-stat-label">MONITORING</div></div>
+        </div>
+      </div>
+
+      <div class="mkt-section" style="background:var(--bg)">
+        <div class="section-eyebrow">AI Agents</div>
+        <div class="section-title" id="agents-title">Six Specialized Trading Agents</div>
+        <div class="section-sub" id="agents-sub">Each agent is trained on a specific market domain. Ask anything — get institutional-grade analysis.</div>
+        <div class="agents-mkt-grid" id="agents-mkt-grid"></div>
+      </div>
+
+      <div class="mt4-section">
+        <div class="section-eyebrow">MT4 / MT5 Integration</div>
+        <div class="section-title" id="mt4-title">Analysis to Execution in One Click</div>
+        <div class="section-sub" id="mt4-sub">TradeOS connects your AI analysis directly to MetaTrader. Get the signal, click the button, execute the trade.</div>
+        <div class="mt4-box">
+          <div class="mt4-logo">
+            <div class="mt4-logo-badge" style="background:rgba(0,214,143,0.15);border:1px solid rgba(0,214,143,0.3);color:var(--green)">MT4</div>
+            <div class="mt4-logo-badge" style="background:rgba(41,121,255,0.15);border:1px solid rgba(41,121,255,0.3);color:var(--blue2)">MT5</div>
+            <span style="color:var(--text2);font-size:13px">MetaTrader Integration</span>
+          </div>
+          <div class="mt4-features" id="mt4-features"></div>
+        </div>
+      </div>
+
+      <div class="mkt-section">
+        <div class="section-eyebrow">What Traders Say</div>
+        <div class="section-title" id="testimonials-title">Trusted by Active Traders</div>
+        <div class="testimonials-grid" id="testimonials-grid"></div>
+      </div>
+
+      <div class="mkt-section" id="pricing-anchor" style="background:var(--bg2)">
+        <div class="section-eyebrow">Pricing</div>
+        <div class="section-title" id="pricing-title">Simple Pricing</div>
+        <div class="section-sub" id="pricing-sub">No commissions. No hidden fees. Cancel anytime.</div>
+        <div class="pricing-grid" id="pricing-grid"></div>
+      </div>
+
+      <div class="footer-cta">
+        <h2 id="footer-cta-title">Ready to Trade Smarter?</h2>
+        <p id="footer-cta-sub">Join traders using AI to find better setups, faster.</p>
+        <button class="btn-green" onclick="showWelcome()" id="footer-cta-btn">Launch Free Trial →</button>
+      </div>
+      <div class="footer-bar"><span id="footer-legal">© 2025 TradeOS · AI Trading Intelligence · Not financial advice · Past performance does not guarantee future results</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   TRANSLATIONS
+══════════════════════════════════════ */
+const T = {
+  en:{
+    sidebar_new:"+ New Analysis", sidebar_agents:"AI Agents", sidebar_recent:"Recent",
+    snav_stocks:"Stock Screener", snav_options:"Options Analyst", snav_forex:"Forex Screener",
+    snav_funds:"Fund Analyzer", snav_risk:"Risk Manager", snav_macro:"Macro Analyst",
+    welcome_greeting:"TRADEOS TERMINAL_",
+    welcome_sub:"AI-powered analysis across stocks, options, forex, and funds. Connected to MT4/MT5.",
+    quick_label:"Quick analysis:",
+    chat_status:"Live data · AI-powered", chat_back:"← Back",
+    disclaimer:"For informational purposes only. Not financial advice. Always conduct your own research.",
+    input_hint:"Enter to send", rag_label:"Market KB",
+    mt_label:"OPEN IN:", mt4_buy:"▲ MT4 BUY", mt4_sell:"▼ MT4 SELL", mt5:"MT5 →", tv:"TradingView →", yf:"Yahoo Finance →",
+    hero_badge:"⚡ AI-POWERED TRADING INTELLIGENCE",
+    hero_title:"Trade Smarter.<br><em>Not Harder.</em>",
+    hero_sub:"AI agents that screen stocks, analyze options, monitor forex, and evaluate funds — connected directly to MT4/MT5 for instant execution.",
+    hero_cta1:"Launch Terminal", hero_cta2:"View Pricing",
+    agents_title:"Six Specialized Trading Agents",
+    agents_sub:"Each agent is trained on a specific market domain. Ask anything — get institutional-grade analysis.",
+    mt4_title:"Analysis to Execution in One Click",
+    mt4_sub:"TradeOS connects your AI analysis directly to MetaTrader. Get the signal, click the button, execute the trade.",
+    testimonials_title:"Trusted by Active Traders",
+    pricing_title:"Simple Pricing", pricing_sub:"No commissions. No hidden fees. Cancel anytime.",
+    footer_cta_title:"Ready to Trade Smarter?",
+    footer_cta_sub:"Join traders using AI to find better setups, faster.",
+    footer_cta_btn:"Launch Free Trial →",
+    footer_legal:"© 2025 TradeOS · AI Trading Intelligence · Not financial advice · Past performance does not guarantee future results",
+    plan_popular:"Most Popular", plan_cta_trial:"Start Free Trial", plan_cta_contact:"Contact Sales",
+    market_open:"MARKETS OPEN", market_closed:"MARKETS CLOSED",
+    agents:{
+      stocks:{name:"Stock Screener",icon:"📈",color:"#00D68F",iconBg:"rgba(0,214,143,0.1)",save:"⚡ Deep equity analysis",
+        desc:"Fundamental + technical analysis on any stock. Revenue, P/E, RSI, MACD, support/resistance levels.",
+        welcome:"Welcome to the Stock Screener. I analyze equities using both fundamental and technical data.\n\nI can help with:\n• Full company analysis (revenue, margins, P/E, growth)\n• Technical setup (RSI, MACD, moving averages, support/resistance)\n• Earnings analysis and estimates\n• Peer comparison and sector positioning\n• Buy/sell signal with MT4/MT5 trade link\n\nEnter a ticker or describe what you're looking for.",
+        placeholder:"e.g. Analyze AAPL — give me technicals + fundamentals and a trade setup"},
+      options:{name:"Options Analyst",icon:"⚡",color:"#7C4DFF",iconBg:"rgba(124,77,255,0.1)",save:"⚡ Greeks + strategy builder",
+        desc:"Options chain analysis, Greeks calculation, strategy builder for calls, puts, spreads, and straddles.",
+        welcome:"Options Analyst ready. I analyze options chains, calculate Greeks, and build strategies.\n\nI can help with:\n• Options chain screening for a ticker\n• Delta, Gamma, Theta, Vega analysis\n• Strategy builder: covered calls, spreads, straddles, iron condors\n• Implied volatility analysis and IV rank\n• Unusual options activity signals\n\nEnter a ticker + expiry or describe your strategy.",
+        placeholder:"e.g. Analyze TSLA options chain for next month — find best call setups"},
+      forex:{name:"Forex Screener",icon:"💱",color:"#00BCD4",iconBg:"rgba(0,188,212,0.1)",save:"⚡ Multi-pair analysis",
+        desc:"Currency pair analysis, trend identification, support/resistance, carry trade opportunities.",
+        welcome:"Forex Screener online. I analyze currency pairs across all timeframes.\n\nI can help with:\n• EUR/USD, GBP/USD, USD/JPY and all major/minor pairs\n• Trend direction and momentum analysis\n• Key support and resistance levels\n• Central bank policy impact\n• Carry trade and correlation analysis\n• MT4/MT5 trade setup generation\n\nEnter a currency pair or ask for a market overview.",
+        placeholder:"e.g. Analyze EUR/USD — trend, key levels, and give me a trade setup for MT4"},
+      funds:{name:"Fund Analyzer",icon:"🏦",color:"#FFB300",iconBg:"rgba(255,179,0,0.1)",save:"⚡ MF + ETF comparison",
+        desc:"Mutual fund and ETF analysis — expense ratios, holdings, performance vs benchmark, risk-adjusted returns.",
+        welcome:"Fund Analyzer ready. I evaluate mutual funds and ETFs across all categories.\n\nI can help with:\n• ETF analysis: holdings, expense ratio, tracking error\n• Mutual fund performance vs benchmark\n• Sector allocation and geographic exposure\n• Sharpe ratio, Sortino ratio, max drawdown\n• Side-by-side fund comparison\n• Factor exposure (value, growth, momentum)\n\nEnter a fund ticker or name to start.",
+        placeholder:"e.g. Compare SPY vs QQQ vs VTI — which is best for long-term growth?"},
+      risk:{name:"Risk Manager",icon:"🛡️",color:"#FF4D6A",iconBg:"rgba(255,77,106,0.1)",save:"⚡ Portfolio risk analysis",
+        desc:"Position sizing, VaR calculation, correlation matrix, portfolio stress testing, drawdown analysis.",
+        welcome:"Risk Manager active. I analyze portfolio risk and help you size positions correctly.\n\nI can help with:\n• Position sizing based on account size and risk tolerance\n• Value at Risk (VaR) calculation\n• Correlation matrix — find diversification gaps\n• Maximum drawdown analysis\n• Stop loss placement using ATR\n• Portfolio stress testing against market scenarios\n\nDescribe your portfolio or paste your positions.",
+        placeholder:"e.g. I have $50k account, 2% risk per trade. Size a position on AAPL at $185 with stop at $180"},
+      macro:{name:"Macro Analyst",icon:"🌍",color:"#2979FF",iconBg:"rgba(41,121,255,0.1)",save:"⚡ Economic impact analysis",
+        desc:"Fed policy, inflation data, GDP, earnings calendar, global macro themes and their market impact.",
+        welcome:"Macro Analyst ready. I analyze economic data and global macro themes.\n\nI can help with:\n• Fed policy and interest rate impact on markets\n• Inflation data (CPI, PCE) analysis\n• GDP and economic growth analysis\n• Upcoming earnings and economic calendar\n• Sector rotation based on macro regime\n• Global macro themes (China, Europe, EM)\n\nAsk me any macro question.",
+        placeholder:"e.g. How will the next Fed decision likely impact USD, bonds, and tech stocks?"},
+    },
+    chips:["Analyze AAPL","EUR/USD setup","TSLA options","SPY vs QQQ","Portfolio risk check","Fed impact on markets"],
+    chip_queries:[
+      "Give me a full fundamental and technical analysis on AAPL — P/E, RSI, MACD, support levels, and a trade setup",
+      "Analyze EUR/USD — current trend, key support and resistance levels, and give me a MT4 long or short trade setup",
+      "Screen TSLA options for next month expiry — find the best call options based on delta, premium, and IV",
+      "Compare SPY vs QQQ vs VTI — expense ratios, 5-year returns, volatility, and which is best for long-term investors",
+      "I have a $50k portfolio: 40% AAPL, 30% MSFT, 20% TSLA, 10% cash. Analyze my risk, correlation, and concentration",
+      "How will the next Federal Reserve interest rate decision impact US equities, USD, and emerging markets?"
+    ],
+    chip_agents:["stocks","stocks","options","funds","risk","macro"],
+    agents_mkt:[
+      {icon:"📈",bg:"rgba(0,214,143,0.1)",name:"Stock Screener",desc:"Full fundamental + technical analysis on any equity. Revenue growth, margins, P/E ratios, RSI, MACD, and trade setups.",tag:"Equities & ETFs"},
+      {icon:"⚡",bg:"rgba(124,77,255,0.1)",name:"Options Analyst",desc:"Options chain screening, Greeks calculation (Delta/Gamma/Theta/Vega), strategy builder, and IV analysis.",tag:"Calls · Puts · Spreads"},
+      {icon:"💱",bg:"rgba(0,188,212,0.1)",name:"Forex Screener",desc:"Currency pair analysis, trend identification, carry trade opportunities, and central bank policy impact.",tag:"All Major & Minor Pairs"},
+      {icon:"🏦",bg:"rgba(255,179,0,0.1)",name:"Fund Analyzer",desc:"ETF and mutual fund analysis — expense ratios, holdings breakdown, benchmark comparison, Sharpe ratio.",tag:"MFs · ETFs · Indices"},
+      {icon:"🛡️",bg:"rgba(255,77,106,0.1)",name:"Risk Manager",desc:"Position sizing, VaR calculation, correlation matrix, portfolio stress testing, and stop loss placement.",tag:"Portfolio Risk"},
+      {icon:"🌍",bg:"rgba(41,121,255,0.1)",name:"Macro Analyst",desc:"Fed policy, inflation data, GDP analysis, earnings calendar, and sector rotation based on macro regime.",tag:"Economics · Policy"},
+    ],
+    mt4_features:[
+      {text:"One-click deep link to MT4 Buy/Sell from any analysis"},
+      {text:"MT5 multi-asset support — stocks, forex, futures"},
+      {text:"Pre-filled trade parameters from AI analysis"},
+      {text:"Stop loss and take profit levels auto-calculated"},
+      {text:"TradingView chart link with AI setup highlighted"},
+      {text:"Trade journal integration — log AI-suggested setups"},
+    ],
+    testimonials:[
+      {quote:"TradeOS found a MACD crossover on EUR/USD before I even opened my charts. Executed on MT4 in 30 seconds. Up 2.3% on the trade.",name:"Marcus R.",role:"Forex Day Trader, 6 years"},
+      {quote:"The options analyst saved me from a bad iron condor setup. It spotted the elevated IV rank and suggested waiting. That patience paid off.",name:"Priya S.",role:"Options Trader, Tech sector focus"},
+      {quote:"I use the macro analyst every Sunday to plan my week. It ties together Fed data, earnings, and sector rotation in a way that used to take me hours.",name:"David K.",role:"Portfolio Manager, $2M AUM"},
+    ],
+    plans:[
+      {name:"Starter",price:"$49",period:"/mo",tagline:"For beginner to intermediate traders.",cta:"plan_cta_trial",feats:["All 6 AI agents","50 analyses/month","Stock + Forex screening","MT4/MT5 deep links","TradingView integration","Email alerts"]},
+      {name:"Pro",price:"$149",period:"/mo",tagline:"For active traders and serious investors.",cta:"plan_cta_trial",featured:true,feats:["Everything in Starter","Unlimited analyses","Options chain screening","Real-time data feeds","Portfolio risk dashboard","Priority support","Trade journal"]},
+      {name:"Institutional",price:"Custom",period:"",tagline:"For funds and professional traders.",cta:"plan_cta_contact",feats:["Everything in Pro","API access","Custom AI fine-tuning","Multi-account management","Dedicated analyst","White-label option","SLA 99.99%"]},
+    ],
+  },
+  de:{
+    sidebar_new:"+ Neue Analyse", sidebar_agents:"KI-Agenten", sidebar_recent:"Zuletzt",
+    snav_stocks:"Aktien-Screener", snav_options:"Optionen-Analyst", snav_forex:"Forex-Screener",
+    snav_funds:"Fonds-Analyser", snav_risk:"Risikomanager", snav_macro:"Makro-Analyst",
+    welcome_greeting:"TRADEOS TERMINAL_",
+    welcome_sub:"KI-gestützte Analyse für Aktien, Optionen, Forex und Fonds. Verbunden mit MT4/MT5.",
+    quick_label:"Schnellanalyse:",
+    chat_status:"Live-Daten · KI-gestützt", chat_back:"← Zurück",
+    disclaimer:"Nur zu Informationszwecken. Keine Finanzberatung. Führen Sie immer eigene Recherchen durch.",
+    input_hint:"Enter zum Senden", rag_label:"Markt-KB",
+    mt_label:"ÖFFNEN IN:", mt4_buy:"▲ MT4 KAUFEN", mt4_sell:"▼ MT4 VERKAUFEN", mt5:"MT5 →", tv:"TradingView →", yf:"Yahoo Finance →",
+    hero_badge:"⚡ KI-GESTÜTZTE HANDELSINTELLIGENZ",
+    hero_title:"Klüger handeln.<br><em>Nicht härter.</em>",
+    hero_sub:"KI-Agenten für Aktienscreening, Optionsanalyse, Forex-Überwachung und Fondsanalyse — direkt mit MT4/MT5 verbunden.",
+    hero_cta1:"Terminal starten", hero_cta2:"Preise ansehen",
+    agents_title:"Sechs spezialisierte Handelsagenten",
+    agents_sub:"Jeder Agent ist auf einen bestimmten Marktbereich trainiert. Fragen Sie alles — erhalten Sie institutionelle Analysen.",
+    mt4_title:"Von der Analyse zur Ausführung mit einem Klick",
+    mt4_sub:"TradeOS verbindet Ihre KI-Analyse direkt mit MetaTrader. Signal erhalten, Schaltfläche klicken, Trade ausführen.",
+    testimonials_title:"Von aktiven Händlern vertraut",
+    pricing_title:"Einfache Preise", pricing_sub:"Keine Provisionen. Keine versteckten Gebühren. Jederzeit kündbar.",
+    footer_cta_title:"Bereit, klüger zu handeln?",
+    footer_cta_sub:"Schließen Sie sich Händlern an, die KI nutzen, um bessere Setups zu finden.",
+    footer_cta_btn:"Kostenlose Testversion starten →",
+    footer_legal:"© 2025 TradeOS · KI-Handelsintelligenz · Keine Finanzberatung · Vergangene Wertentwicklung garantiert keine zukünftigen Ergebnisse",
+    plan_popular:"Beliebteste Wahl", plan_cta_trial:"Kostenlos testen", plan_cta_contact:"Vertrieb kontaktieren",
+    market_open:"MÄRKTE OFFEN", market_closed:"MÄRKTE GESCHLOSSEN",
+    agents:{
+      stocks:{name:"Aktien-Screener",icon:"📈",color:"#00D68F",iconBg:"rgba(0,214,143,0.1)",save:"⚡ Tiefe Aktienanalyse",desc:"Fundamentale + technische Analyse für jede Aktie.",welcome:"Willkommen beim Aktien-Screener. Ich analysiere Aktien mit fundamentalen und technischen Daten.\n\nIch helfe bei:\n• Vollständige Unternehmensanalyse (Umsatz, Margen, KGV)\n• Technisches Setup (RSI, MACD, Unterstützung/Widerstand)\n• Ertragsanalyse\n• Peer-Vergleich\n\nGeben Sie ein Ticker-Symbol ein.",placeholder:"z.B. Analysiere Apple (AAPL) — Fundamentaldaten, Chartanalyse und Trade-Setup"},
+      options:{name:"Optionen-Analyst",icon:"⚡",color:"#7C4DFF",iconBg:"rgba(124,77,255,0.1)",save:"⚡ Griechen + Strategie",desc:"Optionsketten-Analyse, Griechen-Berechnung und Strategiebuilder.",welcome:"Optionen-Analyst bereit. Ich analysiere Optionsketten und berechne Griechen.\n\nGeben Sie einen Ticker + Verfall ein.",placeholder:"z.B. Analysiere TSLA Optionskette für nächsten Monat"},
+      forex:{name:"Forex-Screener",icon:"💱",color:"#00BCD4",iconBg:"rgba(0,188,212,0.1)",save:"⚡ Multi-Paar Analyse",desc:"Währungspaar-Analyse über alle Zeitrahmen.",welcome:"Forex-Screener online. Ich analysiere Währungspaare über alle Zeitrahmen.\n\nGeben Sie ein Währungspaar ein.",placeholder:"z.B. EUR/USD analysieren — Trend, Schlüsselniveaus und MT4 Trade-Setup"},
+      funds:{name:"Fonds-Analyser",icon:"🏦",color:"#FFB300",iconBg:"rgba(255,179,0,0.1)",save:"⚡ Fonds-Vergleich",desc:"Investmentfonds und ETF-Analyse.",welcome:"Fonds-Analyser bereit. Ich bewerte Investmentfonds und ETFs.\n\nGeben Sie einen Fondsticker ein.",placeholder:"z.B. SPY vs QQQ vs VTI vergleichen"},
+      risk:{name:"Risikomanager",icon:"🛡️",color:"#FF4D6A",iconBg:"rgba(255,77,106,0.1)",save:"⚡ Portfolio-Risikoanalyse",desc:"Positionsgrößenberechnung, VaR, Korrelationsmatrix.",welcome:"Risikomanager aktiv. Ich analysiere Portfolio-Risiken.\n\nBeschreiben Sie Ihr Portfolio.",placeholder:"z.B. Ich habe 50.000€ und möchte AAPL mit 2% Risiko handeln"},
+      macro:{name:"Makro-Analyst",icon:"🌍",color:"#2979FF",iconBg:"rgba(41,121,255,0.1)",save:"⚡ Wirtschaftsanalyse",desc:"Fed-Politik, Inflation, BIP und globale Makrothemen.",welcome:"Makro-Analyst bereit. Ich analysiere Wirtschaftsdaten.\n\nStellen Sie mir eine Makro-Frage.",placeholder:"z.B. Wie wird die nächste Fed-Entscheidung USD und Tech-Aktien beeinflussen?"},
+    },
+    chips:["AAPL analysieren","EUR/USD Setup","TSLA Optionen","SPY vs QQQ","Portfolio-Risiko","Fed-Auswirkung"],
+    chip_queries:["Vollständige Analyse von AAPL — KGV, RSI, MACD, Unterstützungsniveaus und Trade-Setup","EUR/USD analysieren — Trend, Schlüsselniveaus und MT4 Long/Short Trade-Setup","TSLA Optionskette für nächsten Monat — beste Call-Optionen nach Delta und Prämie","SPY vs QQQ vs VTI vergleichen — Kostenquoten, 5-Jahres-Renditen und langfristige Empfehlung","Portfolio: 40% AAPL, 30% MSFT, 20% TSLA, 10% Cash — Risiko, Korrelation und Konzentration","Wie wird die nächste Fed-Zinsentscheidung US-Aktien, USD und Schwellenländer beeinflussen?"],
+    chip_agents:["stocks","forex","options","funds","risk","macro"],
+    agents_mkt:[
+      {icon:"📈",bg:"rgba(0,214,143,0.1)",name:"Aktien-Screener",desc:"Vollständige Fundamental- + technische Analyse für jede Aktie.",tag:"Aktien & ETFs"},
+      {icon:"⚡",bg:"rgba(124,77,255,0.1)",name:"Optionen-Analyst",desc:"Optionsketten-Screening, Griechen-Berechnung und Strategiebuilder.",tag:"Calls · Puts · Spreads"},
+      {icon:"💱",bg:"rgba(0,188,212,0.1)",name:"Forex-Screener",desc:"Währungspaar-Analyse, Trendidentifikation und Zentralbank-Auswirkungen.",tag:"Alle Währungspaare"},
+      {icon:"🏦",bg:"rgba(255,179,0,0.1)",name:"Fonds-Analyser",desc:"ETF und Investmentfonds-Analyse — Kostenquoten, Holdings-Aufschlüsselung.",tag:"Fonds · ETFs · Indizes"},
+      {icon:"🛡️",bg:"rgba(255,77,106,0.1)",name:"Risikomanager",desc:"Positionsgrößenberechnung, VaR, Korrelationsmatrix und Stop-Loss-Platzierung.",tag:"Portfolio-Risiko"},
+      {icon:"🌍",bg:"rgba(41,121,255,0.1)",name:"Makro-Analyst",desc:"Fed-Politik, Inflationsdaten, BIP-Analyse und Sektorrotation.",tag:"Wirtschaft · Politik"},
+    ],
+    mt4_features:[
+      {text:"Ein-Klick Deep-Link zu MT4 Kaufen/Verkaufen aus jeder Analyse"},
+      {text:"MT5 Multi-Asset-Support — Aktien, Forex, Futures"},
+      {text:"Vorausgefüllte Trade-Parameter aus KI-Analyse"},
+      {text:"Stop-Loss und Take-Profit automatisch berechnet"},
+      {text:"TradingView-Chart-Link mit KI-Setup hervorgehoben"},
+      {text:"Trade-Journal-Integration"},
+    ],
+    testimonials:[
+      {quote:"TradeOS fand einen MACD-Crossover auf EUR/USD bevor ich meine Charts öffnete. In 30 Sekunden auf MT4 ausgeführt. +2,3% auf dem Trade.",name:"Markus R.",role:"Forex Day Trader, 6 Jahre"},
+      {quote:"Der Optionen-Analyst bewahrte mich vor einem schlechten Iron Condor Setup. Er erkannte das erhöhte IV-Niveau.",name:"Priya S.",role:"Optionshändlerin, Tech-Sektor"},
+      {quote:"Ich nutze den Makro-Analysten jeden Sonntag zur Wochenplanung. Er verbindet Fed-Daten, Gewinne und Sektorrotation.",name:"David K.",role:"Portfoliomanager, 2M€ AUM"},
+    ],
+    plans:[
+      {name:"Starter",price:"49€",period:"/Monat",tagline:"Für Anfänger bis fortgeschrittene Händler.",cta:"plan_cta_trial",feats:["Alle 6 KI-Agenten","50 Analysen/Monat","Aktien + Forex Screening","MT4/MT5 Deep Links","TradingView Integration","E-Mail-Alerts"]},
+      {name:"Pro",price:"149€",period:"/Monat",tagline:"Für aktive Händler.",cta:"plan_cta_trial",featured:true,feats:["Alles aus Starter","Unbegrenzte Analysen","Optionsketten-Screening","Echtzeit-Datenfeeds","Portfolio-Risiko-Dashboard","Prioritäts-Support"]},
+      {name:"Institutionell",price:"Individuell",period:"",tagline:"Für Fonds und professionelle Händler.",cta:"plan_cta_contact",feats:["Alles aus Pro","API-Zugang","KI-Feinabstimmung","Multi-Account","Dedizierter Analyst","White-Label"]},
+    ],
+  },
+  es:{
+    sidebar_new:"+ Nuevo Análisis", sidebar_agents:"Agentes IA", sidebar_recent:"Recientes",
+    snav_stocks:"Screener Acciones", snav_options:"Analista Opciones", snav_forex:"Screener Forex",
+    snav_funds:"Analizador Fondos", snav_risk:"Gestor Riesgos", snav_macro:"Analista Macro",
+    welcome_greeting:"TRADEOS TERMINAL_",
+    welcome_sub:"Análisis IA en acciones, opciones, forex y fondos. Conectado a MT4/MT5.",
+    quick_label:"Análisis rápido:",
+    chat_status:"Datos en vivo · IA", chat_back:"← Volver",
+    disclaimer:"Solo con fines informativos. No es asesoramiento financiero. Siempre realice su propia investigación.",
+    input_hint:"Enter para enviar", rag_label:"KB Mercado",
+    mt_label:"ABRIR EN:", mt4_buy:"▲ MT4 COMPRAR", mt4_sell:"▼ MT4 VENDER", mt5:"MT5 →", tv:"TradingView →", yf:"Yahoo Finance →",
+    hero_badge:"⚡ INTELIGENCIA DE TRADING IA",
+    hero_title:"Opera más inteligente.<br><em>No más duro.</em>",
+    hero_sub:"Agentes IA para screening de acciones, análisis de opciones, forex y fondos — conectados a MT4/MT5.",
+    hero_cta1:"Lanzar Terminal", hero_cta2:"Ver Precios",
+    agents_title:"Seis Agentes de Trading Especializados",
+    agents_sub:"Cada agente está entrenado en un dominio de mercado específico.",
+    mt4_title:"Del análisis a la ejecución en un clic",
+    mt4_sub:"TradeOS conecta tu análisis IA directamente con MetaTrader.",
+    testimonials_title:"Confiado por Traders Activos",
+    pricing_title:"Precios Simples", pricing_sub:"Sin comisiones. Sin tarifas ocultas. Cancela cuando quieras.",
+    footer_cta_title:"¿Listo para operar más inteligente?",
+    footer_cta_sub:"Únete a traders que usan IA para encontrar mejores setups.",
+    footer_cta_btn:"Iniciar Prueba Gratuita →",
+    footer_legal:"© 2025 TradeOS · Inteligencia de Trading IA · No es asesoramiento financiero",
+    plan_popular:"Más Popular", plan_cta_trial:"Prueba Gratuita", plan_cta_contact:"Contactar Ventas",
+    market_open:"MERCADOS ABIERTOS", market_closed:"MERCADOS CERRADOS",
+    agents:{
+      stocks:{name:"Screener Acciones",icon:"📈",color:"#00D68F",iconBg:"rgba(0,214,143,0.1)",save:"⚡ Análisis profundo",desc:"Análisis fundamental + técnico en cualquier acción.",welcome:"Bienvenido al Screener de Acciones. Analizo acciones con datos fundamentales y técnicos.\n\nPuedo ayudar con:\n• Análisis completo de empresa\n• Setup técnico (RSI, MACD, soportes/resistencias)\n• Comparación con peers\n\nIngresa un ticker o describe lo que buscas.",placeholder:"ej. Analiza AAPL — técnicos, fundamentales y setup de trading"},
+      options:{name:"Analista Opciones",icon:"⚡",color:"#7C4DFF",iconBg:"rgba(124,77,255,0.1)",save:"⚡ Griegas + estrategias",desc:"Análisis de cadena de opciones, cálculo de griegas y constructor de estrategias.",welcome:"Analista de Opciones listo. Analizo cadenas de opciones y calculo griegas.\n\nIngresa un ticker + vencimiento.",placeholder:"ej. Analiza cadena de opciones TSLA para el próximo mes"},
+      forex:{name:"Screener Forex",icon:"💱",color:"#00BCD4",iconBg:"rgba(0,188,212,0.1)",save:"⚡ Análisis multi-par",desc:"Análisis de pares de divisas, identificación de tendencias.",welcome:"Screener Forex en línea. Analizo pares de divisas en todos los marcos temporales.\n\nIngresa un par de divisas.",placeholder:"ej. Analiza EUR/USD — tendencia, niveles clave y setup MT4"},
+      funds:{name:"Analizador Fondos",icon:"🏦",color:"#FFB300",iconBg:"rgba(255,179,0,0.1)",save:"⚡ Comparación FI + ETF",desc:"Análisis de fondos mutuos y ETFs.",welcome:"Analizador de Fondos listo. Evalúo fondos mutuos y ETFs.\n\nIngresa un ticker de fondo.",placeholder:"ej. Compara SPY vs QQQ vs VTI para inversión a largo plazo"},
+      risk:{name:"Gestor Riesgos",icon:"🛡️",color:"#FF4D6A",iconBg:"rgba(255,77,106,0.1)",save:"⚡ Riesgo de portfolio",desc:"Dimensionamiento de posiciones, VaR, matriz de correlación.",welcome:"Gestor de Riesgos activo. Analizo riesgos de cartera.\n\nDescribe tu cartera.",placeholder:"ej. Tengo $50k, riesgo 2% por operación. Dimensiona posición en AAPL a $185 con stop en $180"},
+      macro:{name:"Analista Macro",icon:"🌍",color:"#2979FF",iconBg:"rgba(41,121,255,0.1)",save:"⚡ Análisis económico",desc:"Política de la Fed, inflación, PIB y temas macro globales.",welcome:"Analista Macro listo. Analizo datos económicos y temas macro globales.\n\nHazme cualquier pregunta macro.",placeholder:"ej. ¿Cómo afectará la próxima decisión de la Fed al USD y acciones tecnológicas?"},
+    },
+    chips:["Analizar AAPL","Setup EUR/USD","Opciones TSLA","SPY vs QQQ","Riesgo portfolio","Impacto Fed"],
+    chip_queries:["Análisis completo de AAPL — P/E, RSI, MACD, niveles de soporte y setup de trading","Analiza EUR/USD — tendencia actual, niveles clave y setup MT4 largo o corto","Opciones TSLA próximo mes — mejores calls por delta, prima e IV","Compara SPY vs QQQ vs VTI — ratios de gastos, rendimientos y recomendación","Portfolio: 40% AAPL, 30% MSFT, 20% TSLA, 10% efectivo — analiza riesgo y correlación","¿Cómo afectará la próxima decisión de tasas de la Fed a acciones US, USD y mercados emergentes?"],
+    chip_agents:["stocks","forex","options","funds","risk","macro"],
+    agents_mkt:[
+      {icon:"📈",bg:"rgba(0,214,143,0.1)",name:"Screener Acciones",desc:"Análisis fundamental + técnico completo para cualquier acción.",tag:"Acciones & ETFs"},
+      {icon:"⚡",bg:"rgba(124,77,255,0.1)",name:"Analista Opciones",desc:"Screening de cadena de opciones, cálculo de griegas y constructor de estrategias.",tag:"Calls · Puts · Spreads"},
+      {icon:"💱",bg:"rgba(0,188,212,0.1)",name:"Screener Forex",desc:"Análisis de pares de divisas, identificación de tendencias.",tag:"Todos los Pares"},
+      {icon:"🏦",bg:"rgba(255,179,0,0.1)",name:"Analizador Fondos",desc:"Análisis de ETF y fondos mutuos — ratios de gastos, desglose de tenencias.",tag:"FI · ETFs · Índices"},
+      {icon:"🛡️",bg:"rgba(255,77,106,0.1)",name:"Gestor Riesgos",desc:"Dimensionamiento de posiciones, VaR, matriz de correlación.",tag:"Riesgo Portfolio"},
+      {icon:"🌍",bg:"rgba(41,121,255,0.1)",name:"Analista Macro",desc:"Fed, inflación, PIB y rotación sectorial.",tag:"Economía · Política"},
+    ],
+    mt4_features:[
+      {text:"Deep link de un clic a MT4 Comprar/Vender desde cualquier análisis"},
+      {text:"Soporte multi-activo MT5 — acciones, forex, futuros"},
+      {text:"Parámetros de trading pre-rellenados desde análisis IA"},
+      {text:"Stop loss y take profit calculados automáticamente"},
+      {text:"Enlace de gráfico TradingView con setup IA destacado"},
+      {text:"Integración de diario de trading"},
+    ],
+    testimonials:[
+      {quote:"TradeOS encontró un cruce MACD en EUR/USD antes de que abriera mis gráficos. Ejecutado en MT4 en 30 segundos. +2,3% en la operación.",name:"Marcos R.",role:"Day Trader Forex, 6 años"},
+      {quote:"El analista de opciones me salvó de un mal setup de iron condor. Detectó el IV rank elevado y sugirió esperar.",name:"Priya S.",role:"Trader Opciones, sector Tech"},
+      {quote:"Uso el analista macro cada domingo para planificar mi semana. Conecta datos Fed, ganancias y rotación sectorial.",name:"David K.",role:"Gestor de Cartera, $2M AUM"},
+    ],
+    plans:[
+      {name:"Starter",price:"49€",period:"/mes",tagline:"Para traders principiantes a intermedios.",cta:"plan_cta_trial",feats:["Los 6 agentes IA","50 análisis/mes","Screening acciones + forex","Deep links MT4/MT5","Integración TradingView","Alertas email"]},
+      {name:"Pro",price:"149€",period:"/mes",tagline:"Para traders activos.",cta:"plan_cta_trial",featured:true,feats:["Todo en Starter","Análisis ilimitados","Screening opciones","Feeds datos en tiempo real","Dashboard riesgo","Soporte prioritario"]},
+      {name:"Institucional",price:"Personalizado",period:"",tagline:"Para fondos y traders profesionales.",cta:"plan_cta_contact",feats:["Todo en Pro","Acceso API","IA personalizada","Multi-cuenta","Analista dedicado","White-label"]},
+    ],
+  },
+  hi:{
+    sidebar_new:"+ \u0928\u0908 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923", sidebar_agents:"AI \u090f\u091c\u0947\u0902\u091f", sidebar_recent:"\u0939\u093e\u0932 \u0915\u0947",
+    snav_stocks:"\u0938\u094d\u091f\u0949\u0915 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0930", snav_options:"\u0911\u092a\u094d\u0936\u0928 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915", snav_forex:"\u092b\u093c\u0949\u0930\u0947\u0915\u094d\u0938 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0930",
+    snav_funds:"\u092b\u0902\u0921 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915", snav_risk:"\u091c\u094b\u0916\u093f\u092e \u092a\u094d\u0930\u092c\u0902\u0927\u0915", snav_macro:"\u092e\u0948\u0915\u094d\u0930\u094b \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915",
+    welcome_greeting:"TRADEOS \u091f\u0930\u094d\u092e\u093f\u0928\u0932_",
+    welcome_sub:"AI-\u0938\u0902\u091a\u093e\u0932\u093f\u0924 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0938\u094d\u091f\u0949\u0915, \u0911\u092a\u094d\u0936\u0928, \u092b\u093c\u0949\u0930\u0947\u0915\u094d\u0938 \u0914\u0930 \u092b\u0902\u0921 \u0915\u0947 \u0932\u093f\u090f\u0964 MT4/MT5 \u0938\u0947 \u091c\u0941\u095c\u093e\u0964",
+    quick_label:"\u0924\u094d\u0935\u0930\u093f\u0924 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923:",
+    chat_status:"\u0932\u093e\u0907\u0935 \u0921\u0947\u091f\u093e \u00b7 AI", chat_back:"\u2190 \u0935\u093e\u092a\u0938",
+    disclaimer:"\u0915\u0947\u0935\u0932 \u0938\u0942\u091a\u0928\u093e \u0915\u0947 \u0909\u0926\u094d\u0926\u0947\u0936\u094d\u092f \u0938\u0947\u0964 \u0935\u093f\u0924\u094d\u0924\u0940\u092f \u0938\u0932\u093e\u0939 \u0928\u0939\u0940\u0902\u0964 \u0939\u092e\u0947\u0936\u093e \u0905\u092a\u0928\u093e \u0936\u094b\u0927 \u0915\u0930\u0947\u0902\u0964",
+    input_hint:"Enter \u0926\u092c\u093e\u090f\u0902", rag_label:"\u092e\u093e\u0930\u094d\u0915\u0947\u091f KB",
+    mt_label:"\u0916\u094b\u0932\u0947\u0902:", mt4_buy:"\u25b2 MT4 \u0916\u0930\u0940\u0926\u0947\u0902", mt4_sell:"\u25bc MT4 \u092c\u0947\u091a\u0947\u0902", mt5:"MT5 \u2192", tv:"TradingView \u2192", yf:"Yahoo Finance \u2192",
+    hero_badge:"\u26a1 AI-\u0938\u0902\u091a\u093e\u0932\u093f\u0924 \u0935\u094d\u092f\u093e\u092a\u093e\u0930 \u0921\u0947\u091f\u093e",
+    hero_title:"\u0938\u092e\u091d\u0926\u093e\u0930\u0940 \u0938\u0947 \u0935\u094d\u092f\u093e\u092a\u093e\u0930 \u0915\u0930\u0947\u0902\u0964<br><em>\u0915\u0920\u093f\u0928 \u0928\u0939\u0940\u0902\u0964</em>",
+    hero_sub:"AI \u090f\u091c\u0947\u0902\u091f \u091c\u094b \u0938\u094d\u091f\u0949\u0915, \u0911\u092a\u094d\u0936\u0928, \u092b\u093c\u0949\u0930\u0947\u0915\u094d\u0938 \u0914\u0930 \u092b\u0902\u0921 \u0915\u0940 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u093f\u0902\u0917 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902 - MT4/MT5 \u0938\u0947 \u0938\u0940\u0927\u0947 \u091c\u0941\u095c\u0947\u0964",
+    hero_cta1:"\u091f\u0930\u094d\u092e\u093f\u0928\u0932 \u0936\u0941\u0930\u0942 \u0915\u0930\u0947\u0902", hero_cta2:"\u092e\u0942\u0932\u094d\u092f \u0926\u0947\u0916\u0947\u0902",
+    agents_title:"\u091b\u0939 \u0935\u093f\u0936\u0947\u0937\u091c\u094d\u091e \u0935\u094d\u092f\u093e\u092a\u093e\u0930 \u090f\u091c\u0947\u0902\u091f",
+    agents_sub:"\u092a\u094d\u0930\u0924\u094d\u092f\u0947\u0915 \u090f\u091c\u0947\u0902\u091f \u090f\u0915 \u0935\u093f\u0936\u093f\u0937\u094d\u091f \u092c\u093e\u091c\u093e\u0930 \u0915\u094d\u0937\u0947\u0924\u094d\u0930 \u092e\u0947\u0902 \u092a\u094d\u0930\u0936\u093f\u0915\u094d\u0937\u093f\u0924 \u0939\u0948\u0964",
+    mt4_title:"\u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0938\u0947 \u090f\u0915 \u0915\u094d\u0932\u093f\u0915 \u092e\u0947\u0902 \u0928\u093f\u0937\u094d\u092a\u093e\u0926\u0928",
+    mt4_sub:"TradeOS \u0906\u092a\u0915\u0947 AI \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u094b \u0938\u0940\u0927\u0947 MetaTrader \u0938\u0947 \u091c\u094b\u095c\u0924\u093e \u0939\u0948\u0964",
+    testimonials_title:"\u0938\u0915\u094d\u0930\u093f\u092f \u0935\u094d\u092f\u093e\u092a\u093e\u0930\u093f\u092f\u094b\u0902 \u0926\u094d\u0935\u093e\u0930\u093e \u0935\u093f\u0936\u094d\u0935\u0938\u0928\u0940\u092f",
+    pricing_title:"\u0938\u0930\u0932 \u092e\u0942\u0932\u094d\u092f \u0928\u093f\u0930\u094d\u0927\u093e\u0930\u0923", pricing_sub:"\u0915\u094b\u0908 \u0915\u092e\u0940\u0936\u0928 \u0928\u0939\u0940\u0902\u0964 \u0915\u094b\u0908 \u091b\u093f\u092a\u0940 \u0936\u0941\u0932\u094d\u0915 \u0928\u0939\u0940\u0902\u0964",
+    footer_cta_title:"\u0938\u092e\u091d\u0926\u093e\u0930\u0940 \u0938\u0947 \u0935\u094d\u092f\u093e\u092a\u093e\u0930 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0924\u0948\u092f\u093e\u0930?",
+    footer_cta_sub:"\u0909\u0928 \u0935\u094d\u092f\u093e\u092a\u093e\u0930\u093f\u092f\u094b\u0902 \u0938\u0947 \u091c\u0941\u095c\u0947\u0902 \u091c\u094b AI \u0915\u093e \u0909\u092a\u092f\u094b\u0917 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902\u0964",
+    footer_cta_btn:"\u0928\u093f\u0936\u0941\u0932\u094d\u0915 \u092a\u0930\u0940\u0915\u094d\u0937\u0923 \u0936\u0941\u0930\u0942 \u0915\u0930\u0947\u0902 \u2192",
+    footer_legal:"\u00a9 2025 TradeOS \u00b7 AI \u0935\u094d\u092f\u093e\u092a\u093e\u0930 \u0921\u0947\u091f\u093e \u00b7 \u0935\u093f\u0924\u094d\u0924\u0940\u092f \u0938\u0932\u093e\u0939 \u0928\u0939\u0940\u0902",
+    plan_popular:"\u0938\u092c\u0938\u0947 \u0932\u094b\u0915\u092a\u094d\u0930\u093f\u092f", plan_cta_trial:"\u0928\u093f\u0936\u0941\u0932\u094d\u0915 \u092a\u0930\u0940\u0915\u094d\u0937\u0923", plan_cta_contact:"\u0938\u0902\u092a\u0930\u094d\u0915 \u0915\u0930\u0947\u0902",
+    market_open:"\u092c\u093e\u091c\u093e\u0930 \u0916\u0941\u0932\u093e \u0939\u0948", market_closed:"\u092c\u093e\u091c\u093e\u0930 \u092c\u0902\u0926 \u0939\u0948",
+    agents:{
+      stocks:{name:"\u0938\u094d\u091f\u0949\u0915 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0930",icon:"\ud83d\udcc8",color:"#00D68F",iconBg:"rgba(0,214,143,0.1)",save:"\u26a1 \u0917\u0939\u0930\u093e \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923",desc:"\u0915\u093f\u0938\u0940 \u092d\u0940 \u0936\u0947\u092f\u0930 \u092a\u0930 \u092e\u094c\u0932\u093f\u0915 + \u0924\u0915\u0928\u0940\u0915\u0940 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923\u0964",welcome:"\u0938\u094d\u091f\u0949\u0915 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0930 \u092e\u0947\u0902 \u0906\u092a\u0915\u093e \u0938\u094d\u0935\u093e\u0917\u0924 \u0939\u0948\u0964\n\n\u092e\u0948\u0902 \u092e\u0926\u0926 \u0915\u0930 \u0938\u0915\u0924\u093e \u0939\u0942\u0901:\n\u2022 \u0915\u0902\u092a\u0928\u0940 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 (P/E, \u0935\u093f\u0915\u093e\u0938)\n\u2022 \u0924\u0915\u0928\u0940\u0915\u0940 \u0938\u0947\u091f\u0905\u092a (RSI, MACD)\n\u2022 \u0938\u092e\u0930\u094d\u0925\u0928/\u092a\u094d\u0930\u0924\u093f\u0930\u094b\u0927 \u0938\u094d\u0924\u0930\n\n\u0915\u094b\u0908 \u091f\u093f\u0915\u0930 \u0926\u0930\u094d\u091c \u0915\u0930\u0947\u0902\u0964",placeholder:"\u0909\u0926\u093e. AAPL \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 - P/E, RSI, MACD \u0914\u0930 \u091f\u094d\u0930\u0947\u0921 \u0938\u0947\u091f\u0905\u092a"},
+      options:{name:"\u0911\u092a\u094d\u0936\u0928 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915",icon:"\u26a1",color:"#7C4DFF",iconBg:"rgba(124,77,255,0.1)",save:"\u26a1 \u0917\u094d\u0930\u0940\u0915 + \u0930\u0923\u0928\u0940\u0924\u093f",desc:"\u0911\u092a\u094d\u0936\u0928 \u091a\u0947\u0928 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0914\u0930 \u0917\u094d\u0930\u0940\u0915 \u0917\u0923\u0928\u093e\u0964",welcome:"\u0911\u092a\u094d\u0936\u0928 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915 \u0924\u0948\u092f\u093e\u0930\u0964 \u092e\u0948\u0902 \u0911\u092a\u094d\u0936\u0928 \u091a\u0947\u0928 \u0915\u093e \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u0930\u0924\u093e \u0939\u0942\u0901\u0964\n\n\u0915\u094b\u0908 \u091f\u093f\u0915\u0930 + \u0938\u092e\u093e\u092a\u094d\u0924\u093f \u0926\u0930\u094d\u091c \u0915\u0930\u0947\u0902\u0964",placeholder:"\u0909\u0926\u093e. \u0905\u0917\u0932\u0947 \u092e\u0939\u0940\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f TSLA \u0911\u092a\u094d\u0936\u0928 \u091a\u0947\u0928"},
+      forex:{name:"\u092b\u093c\u0949\u0930\u0947\u0915\u094d\u0938 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0930",icon:"\ud83d\udcb1",color:"#00BCD4",iconBg:"rgba(0,188,212,0.1)",save:"\u26a1 \u092c\u0939\u0941-\u091c\u094b\u095c\u0940 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923",desc:"\u0938\u092d\u0940 \u0938\u092e\u092f \u0938\u0940\u092e\u093e\u0913\u0902 \u092e\u0947\u0902 \u092e\u0941\u0926\u094d\u0930\u093e \u091c\u094b\u095c\u0940 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923\u0964",welcome:"\u092b\u093c\u0949\u0930\u0947\u0915\u094d\u0938 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0930 \u0911\u0928\u0932\u093e\u0907\u0928\u0964 \u092e\u0948\u0902 \u0938\u092d\u0940 \u0938\u092e\u092f \u0938\u0940\u092e\u093e\u0913\u0902 \u092e\u0947\u0902 \u092e\u0941\u0926\u094d\u0930\u093e \u091c\u094b\u095c\u093f\u092f\u094b\u0902 \u0915\u093e \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u0930\u0924\u093e \u0939\u0942\u0901\u0964\n\n\u0915\u094b\u0908 \u092e\u0941\u0926\u094d\u0930\u093e \u091c\u094b\u095c\u0940 \u0926\u0930\u094d\u091c \u0915\u0930\u0947\u0902\u0964",placeholder:"\u0909\u0926\u093e. EUR/USD \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 - \u092a\u094d\u0930\u0935\u0943\u0924\u094d\u0924\u093f, \u0938\u094d\u0924\u0930 \u0914\u0930 MT4 \u0938\u0947\u091f\u0905\u092a"},
+      funds:{name:"\u092b\u0902\u0921 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915",icon:"\ud83c\udfe6",color:"#FFB300",iconBg:"rgba(255,179,0,0.1)",save:"\u26a1 MF + ETF \u0924\u0941\u0932\u0928\u093e",desc:"\u092e\u094d\u092f\u0941\u091a\u0941\u0905\u0932 \u092b\u0902\u0921 \u0914\u0930 ETF \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923\u0964",welcome:"\u092b\u0902\u0921 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915 \u0924\u0948\u092f\u093e\u0930\u0964 \u092e\u0948\u0902 \u092e\u094d\u092f\u0941\u091a\u0941\u0905\u0932 \u092b\u0902\u0921 \u0914\u0930 ETF \u0915\u093e \u092e\u0942\u0932\u094d\u092f\u093e\u0902\u0915\u0928 \u0915\u0930\u0924\u093e \u0939\u0942\u0901\u0964\n\n\u0915\u094b\u0908 \u092b\u0902\u0921 \u091f\u093f\u0915\u0930 \u0926\u0930\u094d\u091c \u0915\u0930\u0947\u0902\u0964",placeholder:"\u0909\u0926\u093e. SPY vs QQQ vs VTI - \u0926\u0940\u0930\u094d\u0918\u0915\u093e\u0932\u0940\u0928 \u0928\u093f\u0935\u0947\u0936 \u0915\u0947 \u0932\u093f\u090f \u0924\u0941\u0932\u0928\u093e"},
+      risk:{name:"\u091c\u094b\u0916\u093f\u092e \u092a\u094d\u0930\u092c\u0902\u0927\u0915",icon:"\ud83d\udee1\ufe0f",color:"#FF4D6A",iconBg:"rgba(255,77,106,0.1)",save:"\u26a1 \u092a\u094b\u0930\u094d\u091f\u092b\u094b\u0932\u093f\u092f\u094b \u091c\u094b\u0916\u093f\u092e",desc:"\u0938\u094d\u0925\u093f\u0924\u093f \u0906\u0915\u093e\u0930, VaR, \u0938\u0939\u0938\u0902\u092c\u0902\u0927 \u092e\u0948\u091f\u094d\u0930\u093f\u0915\u094d\u0938\u0964",welcome:"\u091c\u094b\u0916\u093f\u092e \u092a\u094d\u0930\u092c\u0902\u0927\u0915 \u0938\u0915\u094d\u0930\u093f\u092f\u0964 \u092e\u0948\u0902 \u092a\u094b\u0930\u094d\u091f\u092b\u094b\u0932\u093f\u092f\u094b \u091c\u094b\u0916\u093f\u092e \u0915\u093e \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u0930\u0924\u093e \u0939\u0942\u0901\u0964\n\n\u0905\u092a\u0928\u093e \u092a\u094b\u0930\u094d\u091f\u092b\u094b\u0932\u093f\u092f\u094b \u0935\u093f\u0935\u0930\u0923 \u0915\u0930\u0947\u0902\u0964",placeholder:"\u0909\u0926\u093e. \u092e\u0947\u0930\u0947 \u092a\u093e\u0938 $50k \u0916\u093e\u0924\u093e \u0939\u0948, 2% \u091c\u094b\u0916\u093f\u092e\u0964 AAPL $185 \u092a\u0930 \u0938\u094d\u091f\u0949\u092a $180 \u0915\u0947 \u0938\u093e\u0925 \u0938\u094d\u0925\u093f\u0924\u093f \u0906\u0915\u093e\u0930 \u0926\u0947\u0902"},
+      macro:{name:"\u092e\u0948\u0915\u094d\u0930\u094b \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915",icon:"\ud83c\udf0d",color:"#2979FF",iconBg:"rgba(41,121,255,0.1)",save:"\u26a1 \u0906\u0930\u094d\u0925\u093f\u0915 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923",desc:"Fed \u0928\u0940\u0924\u093f, \u092e\u0939\u0902\u0917\u093e\u0908, GDP \u0914\u0930 \u0935\u0948\u0936\u094d\u0935\u093f\u0915 \u092e\u0948\u0915\u094d\u0930\u094b \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923\u0964",welcome:"\u092e\u0948\u0915\u094d\u0930\u094b \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915 \u0924\u0948\u092f\u093e\u0930\u0964 \u092e\u0948\u0902 \u0906\u0930\u094d\u0925\u093f\u0915 \u0921\u0947\u091f\u093e \u0915\u093e \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u0930\u0924\u093e \u0939\u0942\u0901\u0964\n\n\u0915\u094b\u0908 \u092e\u0948\u0915\u094d\u0930\u094b \u092a\u094d\u0930\u0936\u094d\u0928 \u092a\u0942\u091b\u0947\u0902\u0964",placeholder:"\u0909\u0926\u093e. \u0905\u0917\u0932\u093e Fed \u0928\u093f\u0930\u094d\u0923\u092f USD \u0914\u0930 \u0924\u0915\u0928\u0940\u0915\u0940 \u0936\u0947\u092f\u0930\u094b\u0902 \u0915\u094b \u0915\u0948\u0938\u0947 \u092a\u094d\u0930\u092d\u093e\u0935\u093f\u0924 \u0915\u0930\u0947\u0917\u093e?"},
+    },
+    chips:["AAPL \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923","EUR/USD \u0938\u0947\u091f\u0905\u092a","TSLA \u0911\u092a\u094d\u0936\u0928","SPY vs QQQ","\u091c\u094b\u0916\u093f\u092e \u091c\u093e\u0902\u091a","Fed \u092a\u094d\u0930\u092d\u093e\u0935"],
+    chip_queries:["AAPL \u0915\u093e \u092a\u0942\u0930\u093e \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0915\u0930\u0947\u0902 - P/E, RSI, MACD \u0914\u0930 \u091f\u094d\u0930\u0947\u0921 \u0938\u0947\u091f\u0905\u092a","EUR/USD \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 - \u092a\u094d\u0930\u0935\u0943\u0924\u094d\u0924\u093f, \u0938\u094d\u0924\u0930 \u0914\u0930 MT4 \u0938\u0947\u091f\u0905\u092a","TSLA \u0911\u092a\u094d\u0936\u0928 \u091a\u0947\u0928 \u0905\u0917\u0932\u0947 \u092e\u0939\u0940\u0928\u0947","SPY vs QQQ vs VTI \u0924\u0941\u0932\u0928\u093e \u0915\u0930\u0947\u0902","\u092e\u0947\u0930\u093e \u092a\u094b\u0930\u094d\u091f\u092b\u094b\u0932\u093f\u092f\u094b: 40% AAPL, 30% MSFT, 20% TSLA - \u091c\u094b\u0916\u093f\u092e \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923","\u0905\u0917\u0932\u093e Fed \u0928\u093f\u0930\u094d\u0923\u092f USD \u0914\u0930 \u0936\u0947\u092f\u0930 \u092c\u093e\u091c\u093e\u0930 \u0915\u094b \u0915\u0948\u0938\u0947 \u092a\u094d\u0930\u092d\u093e\u0935\u093f\u0924 \u0915\u0930\u0947\u0917\u093e?"],
+    chip_agents:["stocks","forex","options","funds","risk","macro"],
+    agents_mkt:[
+      {icon:"\ud83d\udcc8",bg:"rgba(0,214,143,0.1)",name:"\u0938\u094d\u091f\u0949\u0915 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0930",desc:"\u0915\u093f\u0938\u0940 \u092d\u0940 \u0936\u0947\u092f\u0930 \u092a\u0930 \u092e\u094c\u0932\u093f\u0915 + \u0924\u0915\u0928\u0940\u0915\u0940 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923\u0964",tag:"\u0936\u0947\u092f\u0930 & ETF"},
+      {icon:"\u26a1",bg:"rgba(124,77,255,0.1)",name:"\u0911\u092a\u094d\u0936\u0928 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915",desc:"\u0911\u092a\u094d\u0936\u0928 \u091a\u0947\u0928 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u093f\u0902\u0917, \u0917\u094d\u0930\u0940\u0915 \u0917\u0923\u0928\u093e \u0914\u0930 \u0930\u0923\u0928\u0940\u0924\u093f \u0928\u093f\u0930\u094d\u092e\u093e\u0924\u093e\u0964",tag:"Calls \u00b7 Puts \u00b7 Spreads"},
+      {icon:"\ud83d\udcb1",bg:"rgba(0,188,212,0.1)",name:"\u092b\u093c\u0949\u0930\u0947\u0915\u094d\u0938 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0930",desc:"\u092e\u0941\u0926\u094d\u0930\u093e \u091c\u094b\u095c\u0940 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923, \u092a\u094d\u0930\u0935\u0943\u0924\u094d\u0924\u093f \u092a\u0939\u091a\u093e\u0928\u0964",tag:"\u0938\u092d\u0940 \u091c\u094b\u095c\u093f\u092f\u093e\u0902"},
+      {icon:"\ud83c\udfe6",bg:"rgba(255,179,0,0.1)",name:"\u092b\u0902\u0921 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915",desc:"ETF \u0914\u0930 \u092e\u094d\u092f\u0941\u091a\u0941\u0905\u0932 \u092b\u0902\u0921 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923\u0964",tag:"\u092e\u094d\u092f\u0942\u091a\u0941\u0905\u0932 \u092b\u0902\u0921 \u00b7 ETF"},
+      {icon:"\ud83d\udee1\ufe0f",bg:"rgba(255,77,106,0.1)",name:"\u091c\u094b\u0916\u093f\u092e \u092a\u094d\u0930\u092c\u0902\u0927\u0915",desc:"\u0938\u094d\u0925\u093f\u0924\u093f \u0906\u0915\u093e\u0930, VaR, \u0938\u0939\u0938\u0902\u092c\u0902\u0927 \u092e\u0948\u091f\u094d\u0930\u093f\u0915\u094d\u0938\u0964",tag:"\u092a\u094b\u0930\u094d\u091f\u092b\u094b\u0932\u093f\u092f\u094b \u091c\u094b\u0916\u093f\u092e"},
+      {icon:"\ud83c\udf0d",bg:"rgba(41,121,255,0.1)",name:"\u092e\u0948\u0915\u094d\u0930\u094b \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915",desc:"Fed \u0928\u0940\u0924\u093f, \u092e\u0939\u0902\u0917\u093e\u0908, GDP \u0914\u0930 \u0938\u0947\u0915\u094d\u091f\u0930 \u0930\u094b\u091f\u0947\u0936\u0928\u0964",tag:"\u0905\u0930\u094d\u0925\u0936\u093e\u0938\u094d\u0924\u094d\u0930"},
+    ],
+    mt4_features:[
+      {text:"MT4 \u0915\u094b \u0915\u093f\u0938\u0940 \u092d\u0940 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0938\u0947 \u090f\u0915-\u0915\u094d\u0932\u093f\u0915 \u0921\u0940\u092a \u0932\u093f\u0902\u0915"},
+      {text:"MT5 \u092e\u0932\u094d\u091f\u0940-\u0910\u0938\u0947\u091f \u0938\u092e\u0930\u094d\u0925\u0928"},
+      {text:"AI \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923 \u0938\u0947 \u092a\u0942\u0930\u094d\u0935-\u092d\u0930\u0947 \u091f\u094d\u0930\u0947\u0921 \u092a\u0948\u0930\u093e\u092e\u0940\u091f\u0930"},
+      {text:"\u0938\u094d\u091f\u0949\u092a \u0932\u0949\u0938 \u0914\u0930 \u091f\u0947\u0915 \u092a\u094d\u0930\u0949\u092b\u093f\u091f \u0938\u094d\u0935\u091a\u093e\u0932\u093f\u0924 \u0917\u0923\u0928\u093e"},
+      {text:"AI \u0938\u0947\u091f\u0905\u092a \u0915\u0947 \u0938\u093e\u0925 TradingView \u0932\u093f\u0902\u0915"},
+      {text:"\u091f\u094d\u0930\u0947\u0921 \u091c\u0930\u094d\u0928\u0932 \u0908\u0928\u094d\u091f\u0940\u0917\u094d\u0930\u0947\u0936\u0928"},
+    ],
+    testimonials:[
+      {quote:"TradeOS \u0928\u0947 EUR/USD \u092a\u0930 MACD \u0915\u094d\u0930\u0949\u0938\u094b\u0935\u0930 \u0922\u0942\u0902\u0922\u093e\u0964 30 \u0938\u0947\u0915\u0902\u0921 \u092e\u0947\u0902 MT4 \u092a\u0930 +2.3%\u0964",name:"\u092e\u093e\u0930\u094d\u0915\u0938 R.",role:"\u092b\u093c\u0949\u0930\u0947\u0915\u094d\u0938 \u0921\u0947 \u091f\u094d\u0930\u0947\u0921\u0930"},
+      {quote:"\u0911\u092a\u094d\u0936\u0928 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915 \u0928\u0947 \u0909\u091a\u094d\u091a IV \u0930\u0948\u0902\u0915 \u0926\u0947\u0916\u093e \u0914\u0930 \u0907\u0902\u0924\u091c\u093e\u0930 \u0915\u0930\u0928\u0947 \u0915\u0940 \u0938\u0932\u093e\u0939 \u0926\u0940\u0964 \u0938\u0939\u0940 \u0928\u093f\u0930\u094d\u0923\u092f\u0964",name:"\u092a\u094d\u0930\u093f\u092f\u093e S.",role:"\u0911\u092a\u094d\u0936\u0928 \u0935\u094d\u092f\u093e\u092a\u093e\u0930\u0940"},
+      {quote:"\u092e\u0948\u0902 \u0939\u0930 \u0930\u0935\u093f\u0935\u093e\u0930 \u092e\u0948\u0915\u094d\u0930\u094b \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915 \u0915\u093e \u0909\u092a\u092f\u094b\u0917 \u0915\u0930\u0924\u093e \u0939\u0942\u0901\u0964 Fed \u0921\u0947\u091f\u093e \u0914\u0930 \u0938\u0947\u0915\u094d\u091f\u0930 \u0930\u094b\u091f\u0947\u0936\u0928 \u0938\u092d\u0940 \u090f\u0915 \u091c\u0917\u0939 \u0939\u0948\u0964",name:"\u0926\u093e\u0935\u093f\u0926 K.",role:"\u092a\u094b\u0930\u094d\u091f\u092b\u094b\u0932\u093f\u092f\u094b \u092e\u0948\u0928\u0947\u091c\u0930"},
+    ],
+    plans:[
+      {name:"Starter",price:"\u20b94,099",period:"/\u092e\u093e\u0939",tagline:"\u0936\u0941\u0930\u0941\u0906\u0924\u0940 \u0938\u0947 \u0909\u0928\u094d\u0928\u0924 \u0935\u094d\u092f\u093e\u092a\u093e\u0930\u093f\u092f\u094b\u0902 \u0915\u0947 \u0932\u093f\u090f\u0964",cta:"plan_cta_trial",feats:["\u0938\u092d\u0940 6 AI \u090f\u091c\u0947\u0902\u091f","50 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923/\u092e\u093e\u0939","\u0938\u094d\u091f\u0949\u0915 + \u092b\u093c\u0949\u0930\u0947\u0915\u094d\u0938","MT4/MT5 \u0932\u093f\u0902\u0915","TradingView","\u0908\u092e\u0947\u0932 \u0905\u0932\u0930\u094d\u091f"]},
+      {name:"Pro",price:"\u20b912,499",period:"/\u092e\u093e\u0939",tagline:"\u0938\u0915\u094d\u0930\u093f\u092f \u0935\u094d\u092f\u093e\u092a\u093e\u0930\u093f\u092f\u094b\u0902 \u0915\u0947 \u0932\u093f\u090f\u0964",cta:"plan_cta_trial",featured:true,feats:["\u0938\u0902\u092a\u0942\u0930\u094d\u0923 Starter","\u0905\u0938\u0940\u092e\u093f\u0924 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0923","\u0911\u092a\u094d\u0936\u0928 \u0938\u094d\u0915\u094d\u0930\u0940\u0928\u093f\u0902\u0917","\u0930\u0940\u092f\u0932-\u091f\u093e\u0907\u092e \u0921\u0947\u091f\u093e","\u091c\u094b\u0916\u093f\u092e \u0921\u0948\u0936\u092c\u094b\u0930\u094d\u0921","\u092a\u094d\u0930\u093e\u0925\u092e\u093f\u0915\u0924\u093e \u0938\u092e\u0930\u094d\u0925\u0928"]},
+      {name:"\u0938\u0902\u0938\u094d\u0925\u093e\u0917\u0924",price:"\u0915\u0938\u094d\u091f\u092e",period:"",tagline:"\u092b\u0902\u0921 \u0914\u0930 \u092a\u0947\u0936\u0947\u0935\u0930 \u0935\u094d\u092f\u093e\u092a\u093e\u0930\u093f\u092f\u094b\u0902 \u0915\u0947 \u0932\u093f\u090f\u0964",cta:"plan_cta_contact",feats:["Pro \u0938\u092c","API \u090f\u0915\u094d\u0938\u0947\u0938","\u0915\u0938\u094d\u091f\u092e AI","Multi-Account","\u0938\u092e\u0930\u094d\u092a\u093f\u0924 \u0935\u093f\u0936\u094d\u0932\u0947\u0937\u0915","White-Label"]},
+    ],
+  }
+};
+
+const LANG_META={en:{flag:"🇺🇸",code:"EN"},de:{flag:"🇩🇪",code:"DE"},es:{flag:"🇪🇸",code:"ES"},hi:{flag:"🇮🇳",code:"HI"}};
+let currentLang='en',currentAgent=null,isLoading=false;
+
+function detectBrowserLang(){const bl=(navigator.language||'en').toLowerCase().slice(0,2);return T[bl]?bl:'en';}
+
+function setLang(lang){
+  currentLang=lang;
+  document.getElementById('lang-dropdown').classList.remove('open');
+  document.getElementById('current-flag').textContent=LANG_META[lang].flag;
+  document.getElementById('current-lang-code').textContent=LANG_META[lang].code;
+  document.querySelectorAll('.lang-option').forEach(el=>el.classList.remove('active'));
+  document.getElementById('lang-'+lang).classList.add('active');
+  localStorage.setItem('tradeos_lang',lang);
+  applyTranslations();
+}
+
+function toggleLangDropdown(){document.getElementById('lang-dropdown').classList.toggle('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.lang-switcher'))document.getElementById('lang-dropdown').classList.remove('open');});
+
+function applyTranslations(){
+  const L=T[currentLang];
+  document.getElementById('nav-about-btn').textContent=L.agents_title?'About':'About';
+  document.getElementById('nav-pricing-btn').textContent=L.pricing_title||'Pricing';
+  document.getElementById('nav-app-btn').textContent=L.hero_cta1||'Launch App';
+  document.getElementById('sidebar-new-btn').textContent=L.sidebar_new;
+  document.getElementById('sidebar-section-agents').textContent=L.sidebar_agents;
+  document.getElementById('sidebar-section-recent').textContent=L.sidebar_recent;
+  ['stocks','options','forex','funds','risk','macro'].forEach(id=>{
+    const el=document.getElementById('snav-'+id); if(el)el.textContent=L['snav_'+id];
+  });
+  document.getElementById('welcome-greeting').textContent=L.welcome_greeting;
+  document.getElementById('welcome-sub').textContent=L.welcome_sub;
+  document.getElementById('quick-label').textContent=L.quick_label;
+  if(L.market_open)document.getElementById('market-status-text').textContent=isMarketOpen()?L.market_open:L.market_closed;
+  document.getElementById('chat-header-status').textContent=L.chat_status;
+  document.getElementById('chat-back-btn').textContent=L.chat_back;
+  document.getElementById('input-hint').textContent=L.input_hint;
+  document.getElementById('rag-label').textContent=L.rag_label;
+  document.getElementById('mt-bar-label').textContent=L.mt_label;
+  document.getElementById('mt4-buy-btn').textContent=L.mt4_buy;
+  document.getElementById('mt4-sell-btn').textContent=L.mt4_sell;
+  document.getElementById('mt5-btn').textContent=L.mt5;
+  document.getElementById('tv-btn').textContent=L.tv;
+  document.getElementById('yf-btn').textContent=L.yf;
+  document.getElementById('hero-badge').textContent=L.hero_badge;
+  document.getElementById('hero-title').innerHTML=L.hero_title;
+  document.getElementById('hero-sub').textContent=L.hero_sub;
+  document.getElementById('hero-cta1').textContent=L.hero_cta1;
+  document.getElementById('hero-cta2').textContent=L.hero_cta2;
+  document.getElementById('agents-title').textContent=L.agents_title;
+  document.getElementById('agents-sub').textContent=L.agents_sub;
+  document.getElementById('mt4-title').textContent=L.mt4_title;
+  document.getElementById('mt4-sub').textContent=L.mt4_sub;
+  document.getElementById('testimonials-title').textContent=L.testimonials_title;
+  document.getElementById('pricing-title').textContent=L.pricing_title;
+  document.getElementById('pricing-sub').textContent=L.pricing_sub;
+  document.getElementById('footer-cta-title').textContent=L.footer_cta_title;
+  document.getElementById('footer-cta-sub').textContent=L.footer_cta_sub;
+  document.getElementById('footer-cta-btn').textContent=L.footer_cta_btn;
+  document.getElementById('footer-legal').textContent=L.footer_legal;
+  if(currentAgent){
+    const ag=L.agents[currentAgent];
+    document.getElementById('chat-header-name').textContent=ag.name;
+    document.getElementById('chat-input').placeholder=ag.placeholder;
+  }
+  renderAgentGrid(); renderChips(); renderAgentsMkt(); renderMt4Features(); renderTestimonials(); renderPricing();
+}
+
+/* ── MARKET STATUS ── */
+function isMarketOpen(){
+  const now=new Date();
+  const day=now.getUTCDay();
+  const hour=now.getUTCHours();
+  if(day===0||day===6)return false;
+  return hour>=14&&hour<21;
+}
+
+/* ── LIVE TICKERS (Yahoo Finance via proxy) ── */
+async function fetchTicker(id,sym,dec){
+  try{
+    const r=await fetch('/api/quote/'+encodeURIComponent(sym));
+    if(!r.ok)return;
+    const d=await r.json();
+    if(!d.price)return;
+    const price=d.price,prev=d.prev||d.price;
+    const pct=((price-prev)/prev*100);
+    const up=pct>=0;
+    const chg=pct.toFixed(dec||2);
+    const pe=document.getElementById(id+'-price');
+    const ce=document.getElementById(id+'-chg');
+    if(pe)pe.textContent=price<10?price.toFixed(4):price.toFixed(dec||2);
+    if(ce){ce.textContent=(up?'+':'')+chg+'%';ce.className='ticker-change '+(up?'up':'down');}
+  }catch(e){}
+}
+async function fetchTickers(){
+  fetchTicker('spy','SPY');
+  fetchTicker('qqq','QQQ');
+  fetchTicker('aapl','AAPL');
+  fetchTicker('eurusd','EURUSD=X',4);
+  fetchTicker('btc','BTC-USD');
+  fetchTicker('gold','GC=F');
+}
+
+/* ── RENDER FUNCTIONS ── */
+function renderAgentGrid(){
+  const L=T[currentLang];
+  const ids=['stocks','options','forex','funds','risk','macro'];
+  document.getElementById('agent-grid').innerHTML=ids.map(id=>{
+    const ag=L.agents[id];
+    return `<div class="agent-card" onclick="openAgent('${id}')">
+      <div class="agent-card-stripe" style="background:${ag.color}"></div>
+      <div class="agent-card-icon" style="background:${ag.iconBg}">${ag.icon}</div>
+      <div class="agent-card-name" style="color:${ag.color}">${ag.name}</div>
+      <div class="agent-card-desc">${ag.desc}</div>
+      <div class="agent-card-save" style="color:${ag.color}">${ag.save}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChips(){
+  const L=T[currentLang];
+  document.getElementById('quick-chips').innerHTML=L.chips.map((c,i)=>
+    `<div class="chip" onclick="quickPrompt('${L.chip_agents[i]}','${L.chip_queries[i].replace(/'/g,"\\'")}')">` + c + `</div>`
+  ).join('');
+}
+
+function renderAgentsMkt(){
+  const L=T[currentLang];
+  document.getElementById('agents-mkt-grid').innerHTML=L.agents_mkt.map(a=>
+    `<div class="agent-mkt-card">
+      <div class="agent-mkt-icon" style="background:${a.bg}">${a.icon}</div>
+      <div class="agent-mkt-name">${a.name}</div>
+      <div class="agent-mkt-desc">${a.desc}</div>
+      <div class="agent-mkt-tag">${a.tag}</div>
+    </div>`
+  ).join('');
+}
+
+function renderMt4Features(){
+  const L=T[currentLang];
+  document.getElementById('mt4-features').innerHTML=L.mt4_features.map(f=>
+    `<div class="mt4-feat"><span class="mt4-feat-check">✓</span><span class="mt4-feat-text">${f.text}</span></div>`
+  ).join('');
+}
+
+function renderTestimonials(){
+  const L=T[currentLang];
+  document.getElementById('testimonials-grid').innerHTML=L.testimonials.map(t=>
+    `<div class="testimonial"><div class="t-stars">★★★★★</div><div class="t-quote">"${t.quote}"</div>
+    <div class="t-author"><div class="t-avatar">${t.name.split(' ')[0][0]}${t.name.split(' ').slice(-1)[0][0]}</div>
+    <div><div class="t-name">${t.name}</div><div class="t-role">${t.role}</div></div></div></div>`
+  ).join('');
+}
+
+function renderPricing(){
+  const L=T[currentLang];
+  document.getElementById('pricing-grid').innerHTML=L.plans.map(p=>
+    `<div class="price-card ${p.featured?'featured':''}">
+      ${p.featured?`<div class="price-popular">${L.plan_popular}</div>`:''}
+      <div class="price-plan-name">${p.name}</div>
+      <div class="price-val">${p.price}</div>
+      <div class="price-mo">${p.period}</div>
+      <div class="price-tagline">${p.tagline}</div>
+      <button class="price-btn">${L[p.cta]}</button>
+      <div class="price-feats">${p.feats.map(f=>`<div class="price-feat"><span class="price-feat-check">✓</span>${f}</div>`).join('')}</div>
+    </div>`
+  ).join('');
+}
+
+/* ── NAV ── */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('open');}
+function showWelcome(){document.getElementById('welcome-screen').style.display='block';document.getElementById('chat-screen').style.display='none';document.getElementById('marketing-page').style.display='none';document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));currentAgent=null;}
+function showMarketing(){document.getElementById('welcome-screen').style.display='none';document.getElementById('chat-screen').style.display='none';document.getElementById('marketing-page').style.display='block';document.getElementById('marketing-page').scrollTop=0;}
+function showPricing(){showMarketing();setTimeout(()=>document.getElementById('pricing-anchor').scrollIntoView({behavior:'smooth'}),100);}
+
+/* ── AGENTS ── */
+function openAgent(id){
+  currentAgent=id;
+  const L=T[currentLang]; const ag=L.agents[id];
+  document.getElementById('welcome-screen').style.display='none';
+  document.getElementById('chat-screen').style.display='flex';
+  document.getElementById('marketing-page').style.display='none';
+  document.getElementById('chat-header-icon').textContent=ag.icon;
+  document.getElementById('chat-header-icon').style.background=ag.iconBg;
+  document.getElementById('chat-header-name').textContent=ag.name;
+  document.getElementById('chat-input').placeholder=ag.placeholder;
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  const nav=document.getElementById('nav-'+id);if(nav)nav.classList.add('active');
+  document.getElementById('chat-messages').innerHTML='';
+  addMessage('assistant',ag.welcome);
+  // Update MT bar color
+  document.getElementById('mt4-buy-btn').style.color=ag.color==='#FF4D6A'?'var(--red)':'var(--green)';
+}
+
+function quickPrompt(id,prompt){openAgent(id);setTimeout(()=>{document.getElementById('chat-input').value=prompt;sendMessage();},300);}
+
+/* ── CHAT ── */
+function addMessage(role,text){
+  const msgs=document.getElementById('chat-messages');
+  const div=document.createElement('div');div.className=`msg ${role}`;
+  const time=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const L=T[currentLang]; const ag=L.agents[currentAgent]||{};
+  if(role==='assistant'){div.innerHTML=`<div class="msg-avatar">T</div><div class="msg-content"><div class="msg-agent-label">${ag.icon||'📊'} ${ag.name||'TradeOS'}</div><div class="msg-bubble">${formatText(text)}</div><div class="msg-time">${time}</div></div>`;}
+  else{div.innerHTML=`<div class="msg-content"><div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time">${time}</div></div><div class="msg-avatar">U</div>`;}
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function showTyping(){const msgs=document.getElementById('chat-messages');const div=document.createElement('div');div.className='msg assistant';div.id='typing-indicator';div.innerHTML=`<div class="msg-avatar">T</div><div class="typing"><span></span><span></span><span></span></div>`;msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
+function removeTyping(){const el=document.getElementById('typing-indicator');if(el)el.remove();}
+
+async function sendMessage(){
+  if(isLoading||!currentAgent)return;
+  const input=document.getElementById('chat-input');const text=input.value.trim();if(!text)return;
+  input.value='';input.style.height='auto';addMessage('user',text);
+  isLoading=true;document.getElementById('send-btn').disabled=true;showTyping();
+  try{
+    const useRag=document.getElementById('use-rag').checked;
+    const langMap={de:'German',es:'Spanish',hi:'Hindi'};
+    const langInstr=langMap[currentLang]?`\n\nIMPORTANT: Respond entirely in ${langMap[currentLang]}.`:'';
+    const res=await fetch('/api/agents/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agent_type:currentAgent,input:text+langInstr,use_rag:useRag})});
+    const data=await res.json();removeTyping();addMessage('assistant',data.result||data.error||'Error connecting to analysis engine.');
+  }catch(err){removeTyping();addMessage('assistant','Connection error. Please try again.');}
+  isLoading=false;document.getElementById('send-btn').disabled=false;
+}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+function formatText(t){return escapeHtml(t).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/^#{1,3} (.+)$/gm,'<strong style="display:block;margin-top:10px;color:var(--green)">$1</strong>').replace(/^[•\-] (.+)$/gm,'<span style="display:block;padding-left:12px;margin:2px 0;border-left:2px solid var(--border2)">  $1</span>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');}
+function escapeHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ── INIT ── */
+const savedLang=localStorage.getItem('tradeos_lang')||detectBrowserLang();
+setLang(savedLang);
+showWelcome();
+fetchTickers();
+setInterval(fetchTickers,60000);
+</script>
+</body>
+</html>
